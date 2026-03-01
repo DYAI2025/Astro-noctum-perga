@@ -75,9 +75,10 @@
  * [x] Desktop 12-Grid + Mobile Single Column
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Compass, Moon, Sun, Star, Activity, Eye, Zap } from 'lucide-react';
+import { supabase } from './supabase';
 
 const InteractiveStarfield = () => {
   const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
@@ -361,45 +362,105 @@ const KPIStrip = () => (
   </section>
 );
 
-const ZodiacGrid12 = () => {
-  const signs = [
-    { name: "Aries", glyph: "♈", element: "Fire" },
-    { name: "Taurus", glyph: "♉", element: "Earth" },
-    { name: "Gemini", glyph: "♊", element: "Air" },
-    { name: "Cancer", glyph: "♋", element: "Water" },
-    { name: "Leo", glyph: "♌", element: "Fire" },
-    { name: "Virgo", glyph: "♍", element: "Earth" },
-    { name: "Libra", glyph: "♎", element: "Air" },
-    { name: "Scorpio", glyph: "♏", element: "Water" },
-    { name: "Sagittarius", glyph: "♐", element: "Fire" },
-    { name: "Capricorn", glyph: "♑", element: "Earth" },
-    { name: "Aquarius", glyph: "♒", element: "Air" },
-    { name: "Pisces", glyph: "♓", element: "Water" },
-  ];
+const MajorTile = ({ title, value, glyph, subtitle, char }: { title: string, value: string, glyph: string, subtitle: string, char?: string }) => (
+  <div className="hairline-border rounded-3xl p-8 bg-parchment-1/50 relative overflow-hidden group hover:bg-parchment-2/40 transition-all duration-500">
+    <div className="absolute top-0 right-0 w-32 h-32 bg-gold-bronze/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-gold-bronze/10 transition-all" />
+    <div className="flex justify-between items-start mb-6">
+      <div>
+        <h3 className="mono-tag text-gold-bronze mb-1">{title}</h3>
+        <p className="text-xs text-royal-800/50 uppercase tracking-widest">{subtitle}</p>
+      </div>
+      {char && <span className="font-serif text-2xl text-gold-bronze/40">{char}</span>}
+    </div>
+    <div className="flex items-center gap-6">
+      <span className="text-6xl text-gold-bronze group-hover:scale-110 transition-transform duration-500">{glyph}</span>
+      <div className="flex flex-col">
+        <span className="font-serif text-4xl text-ink-text tracking-tight">{value}</span>
+        <div className="w-12 h-[1px] bg-gold-bronze/30 mt-2" />
+      </div>
+    </div>
+  </div>
+);
+
+const SecondaryTile = ({ title, value, glyph, subtitle }: { title: string, value: string, glyph: string, subtitle?: string }) => (
+  <div className="hairline-border rounded-2xl p-6 bg-parchment-1/40 hover:bg-parchment-2/30 transition-all group">
+    <div className="flex flex-col items-center text-center">
+      <span className="mono-tag text-[0.6rem] text-gold-bronze mb-3">{title}</span>
+      <span className="text-3xl text-gold-bronze mb-3 group-hover:scale-110 transition-transform">{glyph}</span>
+      <span className="font-serif text-xl text-ink-text">{value}</span>
+      {subtitle && <span className="text-[0.6rem] uppercase tracking-widest text-royal-800/40 mt-1">{subtitle}</span>}
+    </div>
+  </div>
+);
+
+const ZodiacMatrix = ({ data }: { data: any }) => {
+  const zodiacData = data || {
+    sun_sign: "Aries",
+    bazi_year: "Dragon",
+    bazi_year_char: "甲辰",
+    ascendant: "Gemini",
+    moon_sign: "Cancer",
+    bazi_month: "Snake",
+    bazi_month_char: "巳",
+    day_master: "Earth",
+    day_master_char: "戊",
+    hour_master: "Metal",
+    hour_master_char: "庚"
+  };
 
   return (
-    <div className="col-span-12 lg:col-span-8 hairline-border rounded-3xl p-8 bg-parchment-1/50 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gold-bronze/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-      
-      <div className="flex justify-between items-end mb-8">
-        <div>
-          <h2 className="font-serif text-3xl text-ink-text mb-1">Zodiac Matrix</h2>
-          <span className="mono-tag">CELESTIAL ARCHITECTURE</span>
-        </div>
-        <span className="mono-tag text-royal-800 border border-gold-bronze/30 px-3 py-1 rounded-full">12 SECTORS</span>
+    <div className="col-span-12 space-y-8">
+      {/* Row 1: Major Tiles */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <MajorTile 
+          title="SUN SIGN" 
+          value={zodiacData.sun_sign} 
+          glyph={getZodiacGlyph(zodiacData.sun_sign)} 
+          subtitle="Western Astrology" 
+        />
+        <MajorTile 
+          title="YEAR ANIMAL" 
+          value={zodiacData.bazi_year} 
+          glyph={getBaziGlyph(zodiacData.bazi_year)} 
+          char={zodiacData.bazi_year_char}
+          subtitle="BaZi / Chinese" 
+        />
       </div>
 
-      <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
-        {signs.map((sign, i) => (
-          <div key={i} className="hairline-border rounded-xl p-4 flex flex-col items-center justify-center aspect-square hover:bg-parchment-2/50 transition-colors cursor-default group">
-            <span className="text-3xl text-gold-bronze mb-2 group-hover:text-gold-antique transition-colors">{sign.glyph}</span>
-            <span className="mono-tag text-royal-900 mb-1">{sign.name}</span>
-            <span className="text-[0.55rem] uppercase tracking-widest text-royal-800/50">{sign.element}</span>
-          </div>
-        ))}
+      {/* Row 2: Secondary Tiles */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <SecondaryTile title="ASCENDANT" value={zodiacData.ascendant} glyph={getZodiacGlyph(zodiacData.ascendant)} />
+        <SecondaryTile title="MOON SIGN" value={zodiacData.moon_sign} glyph={getZodiacGlyph(zodiacData.moon_sign)} />
+        <SecondaryTile title="MONTH ANIMAL" value={zodiacData.bazi_month} glyph={getBaziGlyph(zodiacData.bazi_month)} />
+        <SecondaryTile title="DAY MASTER" value={zodiacData.day_master} glyph={zodiacData.day_master_char || "戊"} />
+        <SecondaryTile title="HOUR MASTER" value={zodiacData.hour_master} glyph={zodiacData.hour_master_char || "庚"} />
+      </div>
+
+      {/* Row 3: Detailed Panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <HousesOverview12 />
+        <WuxingBalancePanel />
       </div>
     </div>
   );
+};
+
+const getZodiacGlyph = (sign: string) => {
+  const glyphs: Record<string, string> = {
+    "Aries": "♈", "Taurus": "♉", "Gemini": "♊", "Cancer": "♋",
+    "Leo": "♌", "Virgo": "♍", "Libra": "♎", "Scorpio": "♏",
+    "Sagittarius": "♐", "Capricorn": "♑", "Aquarius": "♒", "Pisces": "♓"
+  };
+  return glyphs[sign] || "✨";
+};
+
+const getBaziGlyph = (animal: string) => {
+  const glyphs: Record<string, string> = {
+    "Rat": "子", "Ox": "丑", "Tiger": "寅", "Rabbit": "卯",
+    "Dragon": "辰", "Snake": "巳", "Horse": "午", "Goat": "未",
+    "Monkey": "申", "Rooster": "酉", "Dog": "戌", "Pig": "亥"
+  };
+  return glyphs[animal] || "🏮";
 };
 
 const PlanetsList = () => {
@@ -459,41 +520,6 @@ const PlanetsList = () => {
                 </p>
               </motion.div>
             )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const BaziPillarsPanel = () => {
-  const pillars = [
-    { title: "YEAR", stem: "Wood", branch: "Dragon", char: "甲辰" },
-    { title: "MONTH", stem: "Fire", branch: "Snake", char: "丁巳" },
-    { title: "DAY", stem: "Earth", branch: "Horse", char: "戊午" },
-    { title: "HOUR", stem: "Metal", branch: "Monkey", char: "庚申" },
-  ];
-
-  return (
-    <div className="col-span-12 md:col-span-6 hairline-border rounded-3xl p-8 bg-parchment-1/50">
-      <div className="mb-8">
-        <h2 className="font-serif text-3xl text-ink-text mb-1">BaZi Pillars</h2>
-        <span className="mono-tag">FOUR PILLARS OF DESTINY</span>
-      </div>
-
-      <div className="grid grid-cols-4 gap-2 md:gap-4">
-        {pillars.map((pillar, i) => (
-          <div key={i} className="flex flex-col items-center">
-            <span className="mono-tag mb-4 text-gold-bronze">{pillar.title}</span>
-            <div className="w-full hairline-border rounded-2xl py-8 flex flex-col items-center justify-center bg-parchment-2/30 gap-4">
-              <span className="text-3xl font-serif text-ink-text">{pillar.char[0]}</span>
-              <div className="w-4 h-[1px] bg-gold-bronze/30" />
-              <span className="text-3xl font-serif text-ink-text">{pillar.char[1]}</span>
-            </div>
-            <div className="mt-4 flex flex-col items-center gap-1">
-              <span className="text-xs text-royal-900 uppercase tracking-wider">{pillar.stem}</span>
-              <span className="text-xs text-royal-800 uppercase tracking-wider">{pillar.branch}</span>
-            </div>
           </div>
         ))}
       </div>
@@ -575,128 +601,30 @@ const HousesOverview12 = () => {
   );
 };
 
-const PlanetDetails = () => {
-  const planets = [
-    { name: "Sun", glyph: "☉", sign: "Aries", house: "10th", aspects: "Trine Mars, Sextile Jupiter", interpretation: "A period of strong vitality and clear purpose. Your core identity aligns seamlessly with your public roles and ambitions." },
-    { name: "Moon", glyph: "☽", sign: "Cancer", house: "4th", aspects: "Square Venus", interpretation: "Emotional depths are stirred. Seek comfort in your roots, but be mindful of overindulgence in seeking harmony." },
-    { name: "Mercury", glyph: "☿", sign: "Gemini", house: "1st", aspects: "Conjunct Ascendant", interpretation: "Your mind is sharp and communicative. A perfect time for intellectual pursuits and expressing your ideas clearly." },
-    { name: "Venus", glyph: "♀", sign: "Taurus", house: "7th", aspects: "Opposite Pluto", interpretation: "Intense relational dynamics. Transformative experiences in partnerships demand honesty and vulnerability." },
-    { name: "Mars", glyph: "♂", sign: "Leo", house: "12th", aspects: "Trine Sun", interpretation: "Hidden drives and subconscious actions. Channel your fiery energy into spiritual or behind-the-scenes creative work." },
-  ];
-
-  return (
-    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
-      <div className="mb-8">
-        <h2 className="font-serif text-3xl text-ink-text mb-1">Planetary Dignities & Aspects</h2>
-        <span className="mono-tag">DETAILED CELESTIAL ANALYSIS</span>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {planets.map((p, i) => (
-          <div key={i} className="hairline-border rounded-xl p-6 bg-parchment-1/40 flex flex-col h-full">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-full hairline-border flex items-center justify-center text-gold-bronze text-2xl shrink-0">
-                {p.glyph}
-              </div>
-              <div>
-                <div className="text-ink-text font-medium text-lg">{p.name}</div>
-                <div className="mono-tag text-royal-800">{p.sign} // {p.house} House</div>
-              </div>
-            </div>
-            <div className="mb-4">
-              <span className="mono-tag text-royal-700">ASPECTS: </span>
-              <span className="mono-tag text-royal-900">{p.aspects}</span>
-            </div>
-            <div className="flex-1">
-              <p className="font-serif italic text-royal-900/80 leading-relaxed text-lg">
-                "{p.interpretation}"
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const PersonalizedInsights = () => {
-  const [formData, setFormData] = React.useState({ date: '', time: '', location: '' });
-  const [insight, setInsight] = React.useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = React.useState(false);
-
-  const handleGenerate = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      setInsight(`Based on your alignment at ${formData.location || 'your birthplace'} on ${formData.date || 'your birth date'}, the current transit of Jupiter forms a harmonious trine with your natal Sun. This indicates a period of profound personal growth and expansion. The celestial architecture suggests focusing your energies on long-term visions rather than immediate gains.`);
-      setIsGenerating(false);
-    }, 1500);
-  };
-
-  return (
-    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
-      <div className="mb-8">
-        <h2 className="font-serif text-3xl text-ink-text mb-1">Personalized Insights</h2>
-        <span className="mono-tag">NATAL CHART SYNTHESIS</span>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">BIRTH DATE</label>
-          <input 
-            type="date" 
-            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
-            value={formData.date}
-            onChange={e => setFormData({...formData, date: e.target.value})}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">BIRTH TIME</label>
-          <input 
-            type="time" 
-            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
-            value={formData.time}
-            onChange={e => setFormData({...formData, time: e.target.value})}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">LOCATION</label>
-          <input 
-            type="text" 
-            placeholder="e.g. Munich, DE"
-            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
-            value={formData.location}
-            onChange={e => setFormData({...formData, location: e.target.value})}
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-center mb-8">
-        <button 
-          onClick={handleGenerate}
-          disabled={isGenerating}
-          className="px-8 py-3 rounded-full hairline-border bg-parchment-2/40 text-ink-text font-serif tracking-widest uppercase hover:bg-gold-bronze hover:text-parchment-0 transition-all duration-300 disabled:opacity-50"
-        >
-          {isGenerating ? 'CALCULATING ALIGNMENTS...' : 'GENERATE SYNTHESIS'}
-        </button>
-      </div>
-
-      {insight && (
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="hairline-border rounded-2xl p-8 bg-parchment-1/50 text-center relative overflow-hidden"
-        >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold-bronze/30 to-transparent" />
-          <p className="font-serif italic text-2xl leading-relaxed text-royal-900 max-w-3xl mx-auto">
-            "{insight}"
-          </p>
-        </motion.div>
-      )}
-    </div>
-  );
-};
-
 export default function App() {
+  const [astroProfile, setAstroProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('astro_profile')
+          .select('*')
+          .single();
+        
+        if (error) throw error;
+        setAstroProfile(data);
+      } catch (err) {
+        console.error('Error fetching astro profile:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
   return (
     <div className="relative min-h-screen selection:bg-gold-bronze/30 selection:text-ink-text">
       <div className="parchment-texture" />
@@ -711,12 +639,15 @@ export default function App() {
         
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid grid-cols-12 gap-6">
-            <ZodiacGrid12 />
+            {loading ? (
+              <div className="col-span-12 py-24 text-center">
+                <div className="inline-block w-8 h-8 border-2 border-gold-bronze border-t-transparent rounded-full animate-spin mb-4" />
+                <p className="mono-tag text-gold-bronze">Synchronizing with Celestial Data...</p>
+              </div>
+            ) : (
+              <ZodiacMatrix data={astroProfile} />
+            )}
             <PlanetsList />
-            <HousesOverview12 />
-            <BaziPillarsPanel />
-            <WuxingBalancePanel />
-            <PersonalizedInsights />
           </div>
         </div>
 
