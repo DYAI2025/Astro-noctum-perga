@@ -81,54 +81,79 @@ import { Compass, Moon, Sun, Star, Activity, Eye, Zap } from 'lucide-react';
 
 const InteractiveStarfield = () => {
   const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
-  const [activeStar, setActiveStar] = React.useState<number | null>(null);
+  const [activeStar, setActiveStar] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    let animationFrameId: number;
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({
-        x: (e.clientX / window.innerWidth - 0.5) * 20,
-        y: (e.clientY / window.innerHeight - 0.5) * 20,
+      animationFrameId = requestAnimationFrame(() => {
+        setMousePos({
+          x: (e.clientX / window.innerWidth - 0.5) * 20,
+          y: (e.clientY / window.innerHeight - 0.5) * 20,
+        });
       });
     };
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(animationFrameId);
+    };
   }, []);
 
-  const stars = React.useMemo(() => Array.from({ length: 50 }).map((_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 2 + 1,
-    depth: Math.random() * 3 + 1,
-    info: `Celestial Body ${i + 1}: RA ${Math.floor(Math.random() * 24)}h, Dec ${Math.floor(Math.random() * 90)}°`
-  })), []);
+  const layers = React.useMemo(() => {
+    const generateStars = (count: number, depth: number) => 
+      Array.from({ length: count }).map((_, i) => ({
+        id: `${depth}-${i}`,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: Math.random() * (depth === 1 ? 1 : depth === 2 ? 2 : 3) + 0.5,
+        info: `Celestial Body ${depth}-${i}: RA ${Math.floor(Math.random() * 24)}h, Dec ${Math.floor(Math.random() * 90)}°`,
+        color: Math.random() > 0.8 ? 'bg-gold-bronze' : 'bg-royal-900'
+      }));
+
+    return [
+      { depth: 1, stars: generateStars(60, 1) },
+      { depth: 2, stars: generateStars(30, 2) },
+      { depth: 4, stars: generateStars(10, 4) },
+    ];
+  }, []);
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-auto z-0">
-      {stars.map((star) => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-auto z-0" onClick={() => setActiveStar(null)}>
+      {layers.map((layer) => (
         <motion.div
-          key={star.id}
-          className="absolute rounded-full bg-royal-900 cursor-pointer hover:bg-gold-antique transition-colors"
-          style={{
-            left: `${star.x}%`,
-            top: `${star.y}%`,
-            width: star.size,
-            height: star.size,
-            boxShadow: '0 0 4px rgba(14, 27, 51, 0.2)'
-          }}
+          key={layer.depth}
+          className="absolute inset-0"
           animate={{
-            x: mousePos.x * star.depth,
-            y: mousePos.y * star.depth,
+            x: mousePos.x * layer.depth,
+            y: mousePos.y * layer.depth,
           }}
           transition={{ type: 'spring', stiffness: 50, damping: 20 }}
-          onClick={() => setActiveStar(activeStar === star.id ? null : star.id)}
         >
-          {activeStar === star.id && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-48 p-3 hairline-border bg-parchment-0/90 backdrop-blur-md rounded-lg z-50">
-              <p className="mono-tag text-gold-bronze mb-1">STAR DATA</p>
-              <p className="font-serif text-sm text-ink-text">{star.info}</p>
+          {layer.stars.map((star) => (
+            <div
+              key={star.id}
+              className={`absolute rounded-full ${star.color} cursor-pointer hover:bg-gold-antique transition-colors hover:scale-150`}
+              style={{
+                left: `${star.x}%`,
+                top: `${star.y}%`,
+                width: star.size,
+                height: star.size,
+                boxShadow: star.color === 'bg-gold-bronze' ? '0 0 6px rgba(130,106,75,0.4)' : '0 0 4px rgba(14, 27, 51, 0.2)'
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveStar(activeStar === star.id ? null : star.id);
+              }}
+            >
+              {activeStar === star.id && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-48 p-3 hairline-border bg-parchment-0/90 backdrop-blur-md rounded-lg z-50 shadow-lg" onClick={(e) => e.stopPropagation()}>
+                  <p className="mono-tag text-gold-bronze mb-1">STAR DATA</p>
+                  <p className="font-serif text-sm text-ink-text">{star.info}</p>
+                </div>
+              )}
             </div>
-          )}
+          ))}
         </motion.div>
       ))}
     </div>
@@ -150,6 +175,73 @@ const SystemHeaderStatusBar = () => (
     </div>
   </header>
 );
+
+const DetailedSun = () => {
+  return (
+    <div className="relative w-28 h-28 rounded-full flex items-center justify-center">
+      {/* Core glow */}
+      <div className="absolute inset-0 rounded-full bg-[#FFF5D1] shadow-[0_0_60px_rgba(255,215,0,0.6),inset_0_0_20px_rgba(255,255,255,1)]" />
+      
+      {/* Plasma surface layer 1 */}
+      <svg className="absolute inset-0 w-full h-full rounded-full mix-blend-multiply opacity-80 animate-[spin_60s_linear_infinite]" viewBox="0 0 100 100">
+        <defs>
+          <filter id="plasma-1">
+            <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="4" seed="1" result="noise">
+              <animate attributeName="baseFrequency" values="0.05;0.07;0.05" dur="20s" repeatCount="indefinite" />
+            </feTurbulence>
+            <feColorMatrix in="noise" type="matrix" values="
+              1 0 0 0 0.8
+              0 1 0 0 0.4
+              0 0 1 0 0
+              0 0 0 3 -1" result="coloredNoise" />
+            <feComposite in="coloredNoise" in2="SourceGraphic" operator="in" />
+          </filter>
+        </defs>
+        <circle cx="50" cy="50" r="50" fill="white" filter="url(#plasma-1)" />
+      </svg>
+
+      {/* Plasma surface layer 2 (counter-rotating) */}
+      <svg className="absolute inset-0 w-full h-full rounded-full mix-blend-color-burn opacity-60 animate-[spin_40s_linear_infinite_reverse]" viewBox="0 0 100 100">
+        <defs>
+          <filter id="plasma-2">
+            <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="3" seed="2" result="noise">
+              <animate attributeName="baseFrequency" values="0.08;0.06;0.08" dur="15s" repeatCount="indefinite" />
+            </feTurbulence>
+            <feColorMatrix in="noise" type="matrix" values="
+              1 0 0 0 0.9
+              0 1 0 0 0.2
+              0 0 1 0 0
+              0 0 0 4 -1.5" result="coloredNoise" />
+            <feComposite in="coloredNoise" in2="SourceGraphic" operator="in" />
+          </filter>
+        </defs>
+        <circle cx="50" cy="50" r="50" fill="white" filter="url(#plasma-2)" />
+      </svg>
+
+      {/* Solar flares / Coronal mass ejections (subtle) */}
+      <svg className="absolute -inset-4 w-[calc(100%+2rem)] h-[calc(100%+2rem)] mix-blend-screen opacity-50 animate-[spin_90s_linear_infinite]" viewBox="0 0 120 120">
+        <defs>
+          <filter id="flares">
+            <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="3" result="noise">
+              <animate attributeName="baseFrequency" values="0.03;0.05;0.03" dur="25s" repeatCount="indefinite" />
+            </feTurbulence>
+            <feColorMatrix in="noise" type="matrix" values="
+              1 0 0 0 0.9
+              0 1 0 0 0.5
+              0 0 1 0 0
+              0 0 0 2 -1" result="coloredNoise" />
+            <feGaussianBlur in="coloredNoise" stdDeviation="2" result="blurred" />
+            <feComposite in="blurred" in2="SourceGraphic" operator="in" />
+          </filter>
+        </defs>
+        <circle cx="60" cy="60" r="55" fill="white" filter="url(#flares)" />
+      </svg>
+
+      {/* Spherical shading */}
+      <div className="absolute inset-0 rounded-full shadow-[inset_-10px_-10px_20px_rgba(139,0,0,0.6),inset_10px_10px_20px_rgba(255,255,255,0.8)] mix-blend-overlay" />
+    </div>
+  );
+};
 
 const HeroSolarSystemModule = () => (
   <section className="relative w-full h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden hairline-border-b">
@@ -203,7 +295,7 @@ const HeroSolarSystemModule = () => (
 
     {/* Center Seal */}
     <div className="relative z-10 w-32 h-32 rounded-full hairline-border flex items-center justify-center bg-parchment-0/80 backdrop-blur-sm shadow-[0_0_40px_rgba(130,106,75,0.1)]">
-      <Sun className="w-12 h-12 text-gold-antique" />
+      <DetailedSun />
     </div>
 
     {/* Planets (Decorative) */}
