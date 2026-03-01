@@ -108,13 +108,13 @@ const InteractiveStarfield = () => {
       {stars.map((star) => (
         <motion.div
           key={star.id}
-          className="absolute rounded-full bg-parchment-1 cursor-pointer hover:bg-gold-highlight transition-colors"
+          className="absolute rounded-full bg-royal-900 cursor-pointer hover:bg-gold-antique transition-colors"
           style={{
             left: `${star.x}%`,
             top: `${star.y}%`,
             width: star.size,
             height: star.size,
-            boxShadow: '0 0 4px rgba(241, 227, 204, 0.4)'
+            boxShadow: '0 0 4px rgba(14, 27, 51, 0.2)'
           }}
           animate={{
             x: mousePos.x * star.depth,
@@ -124,9 +124,9 @@ const InteractiveStarfield = () => {
           onClick={() => setActiveStar(activeStar === star.id ? null : star.id)}
         >
           {activeStar === star.id && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-48 p-3 hairline-border bg-royal-950/90 backdrop-blur-md rounded-lg z-50">
-              <p className="mono-tag text-gold-antique mb-1">STAR DATA</p>
-              <p className="font-serif text-sm text-parchment-0">{star.info}</p>
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-48 p-3 hairline-border bg-parchment-0/90 backdrop-blur-md rounded-lg z-50">
+              <p className="mono-tag text-gold-bronze mb-1">STAR DATA</p>
+              <p className="font-serif text-sm text-ink-text">{star.info}</p>
             </div>
           )}
         </motion.div>
@@ -136,17 +136,17 @@ const InteractiveStarfield = () => {
 };
 
 const SystemHeaderStatusBar = () => (
-  <header className="w-full hairline-border-b py-3 px-6 flex justify-between items-center bg-royal-950/50 backdrop-blur-md sticky top-0 z-40">
+  <header className="w-full hairline-border-b py-3 px-6 flex justify-between items-center bg-parchment-0/50 backdrop-blur-md sticky top-0 z-40">
     <div className="flex items-center gap-4">
-      <Compass className="w-4 h-4 text-gold-antique" />
+      <Compass className="w-4 h-4 text-gold-bronze" />
       <span className="mono-tag">ASTRO NOCTUM // OBSERVATORY</span>
     </div>
     <div className="flex items-center gap-6">
       <span className="mono-tag flex items-center gap-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-status-pale-blue animate-pulse"></span>
+        <span className="w-1.5 h-1.5 rounded-full bg-royal-700 animate-pulse"></span>
         SYSTEM ONLINE
       </span>
-      <span className="mono-tag text-parchment-2">LAT: 48.1371° N // LON: 11.5754° E</span>
+      <span className="mono-tag text-royal-800">LAT: 48.1371° N // LON: 11.5754° E</span>
     </div>
   </header>
 );
@@ -160,7 +160,7 @@ const HeroSolarSystemModule = () => (
       {[1, 2, 3, 4, 5].map((ring) => (
         <div 
           key={ring}
-          className="absolute rounded-full border border-gold-antique"
+          className="absolute rounded-full border border-gold-bronze"
           style={{ 
             width: `${ring * 20}%`, 
             height: `${ring * 20}%`,
@@ -176,7 +176,7 @@ const HeroSolarSystemModule = () => (
       {[0, 30, 60, 90, 120, 150].map((deg) => (
         <div 
           key={deg}
-          className="absolute w-full h-[1px] bg-gold-antique"
+          className="absolute w-full h-[1px] bg-gold-bronze"
           style={{ transform: `rotate(${deg}deg)` }}
         />
       ))}
@@ -190,40 +190,40 @@ const HeroSolarSystemModule = () => (
           className="absolute w-[95%] h-[1px]"
           style={{ transform: `rotate(${i * 5}deg)` }}
         >
-          <div className={`w-${i % 6 === 0 ? '3' : '1'} h-full bg-gold-antique`} />
+          <div className={`w-${i % 6 === 0 ? '3' : '1'} h-full bg-gold-bronze`} />
         </div>
       ))}
     </div>
 
     {/* Coordinate Labels */}
-    <div className="absolute top-8 left-1/2 -translate-x-1/2 mono-tag text-gold-antique/50">0° ARIES</div>
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 mono-tag text-gold-antique/50">180° LIBRA</div>
-    <div className="absolute left-8 top-1/2 -translate-y-1/2 mono-tag text-gold-antique/50 -rotate-90">90° CANCER</div>
-    <div className="absolute right-8 top-1/2 -translate-y-1/2 mono-tag text-gold-antique/50 rotate-90">270° CAPRICORN</div>
+    <div className="absolute top-8 left-1/2 -translate-x-1/2 mono-tag text-gold-bronze/50">0° ARIES</div>
+    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 mono-tag text-gold-bronze/50">180° LIBRA</div>
+    <div className="absolute left-8 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/50 -rotate-90">90° CANCER</div>
+    <div className="absolute right-8 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/50 rotate-90">270° CAPRICORN</div>
 
     {/* Center Seal */}
-    <div className="relative z-10 w-32 h-32 rounded-full hairline-border flex items-center justify-center bg-royal-950/80 backdrop-blur-sm shadow-[0_0_40px_rgba(166,137,93,0.1)]">
-      <Sun className="w-12 h-12 text-gold-highlight" />
+    <div className="relative z-10 w-32 h-32 rounded-full hairline-border flex items-center justify-center bg-parchment-0/80 backdrop-blur-sm shadow-[0_0_40px_rgba(130,106,75,0.1)]">
+      <Sun className="w-12 h-12 text-gold-antique" />
     </div>
 
     {/* Planets (Decorative) */}
     <div className="absolute z-10 w-full h-full flex items-center justify-center pointer-events-none">
       <div className="absolute w-[40%] h-[40%] animate-[spin_60s_linear_infinite]">
-        <div className="absolute -top-2 left-1/2 w-4 h-4 rounded-full bg-status-pale-blue shadow-[0_0_10px_rgba(207,227,234,0.5)]" />
+        <div className="absolute -top-2 left-1/2 w-4 h-4 rounded-full bg-royal-700 shadow-[0_0_10px_rgba(27,44,74,0.3)]" />
       </div>
       <div className="absolute w-[60%] h-[60%] animate-[spin_90s_linear_infinite_reverse]">
-        <div className="absolute top-1/2 -right-2 w-5 h-5 rounded-full bg-gold-antique shadow-[0_0_15px_rgba(166,137,93,0.4)]" />
+        <div className="absolute top-1/2 -right-2 w-5 h-5 rounded-full bg-gold-bronze shadow-[0_0_15px_rgba(130,106,75,0.2)]" />
       </div>
       <div className="absolute w-[80%] h-[80%] animate-[spin_120s_linear_infinite]">
-        <div className="absolute -bottom-3 left-1/3 w-6 h-6 rounded-full bg-parchment-2 shadow-[0_0_20px_rgba(217,199,168,0.3)]" />
+        <div className="absolute -bottom-3 left-1/3 w-6 h-6 rounded-full bg-royal-800 shadow-[0_0_20px_rgba(22,34,57,0.2)]" />
       </div>
     </div>
 
     <div className="absolute bottom-8 left-8">
-      <h1 className="font-serif text-5xl md:text-7xl font-light tracking-tight text-parchment-0 mb-2">
+      <h1 className="font-serif text-5xl md:text-7xl font-light tracking-tight text-ink-text mb-2">
         Astro Noctum
       </h1>
-      <p className="mono-tag text-gold-antique">ORBITAL OVERVIEW // EPOCH 2026</p>
+      <p className="mono-tag text-gold-bronze">ORBITAL OVERVIEW // EPOCH 2026</p>
     </div>
   </section>
 );
@@ -236,33 +236,33 @@ const InsightCardQuotePanel = () => (
       transition={{ duration: 1, delay: 0.2 }}
       className="relative"
     >
-      <span className="absolute -top-12 left-1/2 -translate-x-1/2 text-6xl text-gold-antique/20 font-serif">"</span>
-      <p className="script-font text-3xl md:text-4xl leading-relaxed text-parchment-1 max-w-3xl mx-auto">
+      <span className="absolute -top-12 left-1/2 -translate-x-1/2 text-6xl text-gold-bronze/20 font-serif">"</span>
+      <p className="script-font text-3xl md:text-4xl leading-relaxed text-royal-900 max-w-3xl mx-auto">
         Die Konstellationen flüstern von einer Zeit des Übergangs. 
         <span className="gold-text"> Saturns Präsenz im zehnten Haus</span> fordert Struktur, 
         während die fließenden Wasser des Wu Xing zur Anpassung mahnen.
       </p>
       <div className="mt-8 flex items-center justify-center gap-4">
-        <div className="w-12 h-[1px] bg-gold-antique/30" />
-        <span className="mono-tag text-gold-antique">SYNTHESIS</span>
-        <div className="w-12 h-[1px] bg-gold-antique/30" />
+        <div className="w-12 h-[1px] bg-gold-bronze/30" />
+        <span className="mono-tag text-gold-bronze">SYNTHESIS</span>
+        <div className="w-12 h-[1px] bg-gold-bronze/30" />
       </div>
     </motion.div>
   </section>
 );
 
 const KPIStrip = () => (
-  <section className="w-full hairline-border-y bg-royal-900/30">
-    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gold-antique/20">
+  <section className="w-full hairline-border-y bg-parchment-1/30">
+    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gold-bronze/20">
       {[
         { label: "RESONANZ", value: "87%", icon: Activity },
         { label: "FOKUS", value: "ZENITH", icon: Eye },
         { label: "ENERGIE", value: "STEIGEND", icon: Zap }
       ].map((kpi, i) => (
         <div key={i} className="p-8 flex flex-col items-center justify-center text-center">
-          <kpi.icon className="w-5 h-5 text-gold-antique mb-4 opacity-70" />
+          <kpi.icon className="w-5 h-5 text-gold-bronze mb-4 opacity-70" />
           <span className="mono-tag mb-2">{kpi.label}</span>
-          <span className="font-serif text-3xl text-parchment-0">{kpi.value}</span>
+          <span className="font-serif text-3xl text-ink-text">{kpi.value}</span>
         </div>
       ))}
     </div>
@@ -286,23 +286,23 @@ const ZodiacGrid12 = () => {
   ];
 
   return (
-    <div className="col-span-12 lg:col-span-8 hairline-border rounded-3xl p-8 bg-royal-900/20 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gold-antique/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+    <div className="col-span-12 lg:col-span-8 hairline-border rounded-3xl p-8 bg-parchment-1/50 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gold-bronze/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
       
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="font-serif text-3xl text-parchment-0 mb-1">Zodiac Matrix</h2>
+          <h2 className="font-serif text-3xl text-ink-text mb-1">Zodiac Matrix</h2>
           <span className="mono-tag">CELESTIAL ARCHITECTURE</span>
         </div>
-        <span className="mono-tag text-parchment-2 border border-gold-antique/30 px-3 py-1 rounded-full">12 SECTORS</span>
+        <span className="mono-tag text-royal-800 border border-gold-bronze/30 px-3 py-1 rounded-full">12 SECTORS</span>
       </div>
 
       <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
         {signs.map((sign, i) => (
-          <div key={i} className="hairline-border rounded-xl p-4 flex flex-col items-center justify-center aspect-square hover:bg-royal-800/50 transition-colors cursor-default group">
-            <span className="text-3xl text-gold-antique mb-2 group-hover:text-gold-highlight transition-colors">{sign.glyph}</span>
-            <span className="mono-tag text-parchment-1 mb-1">{sign.name}</span>
-            <span className="text-[0.55rem] uppercase tracking-widest text-parchment-2/50">{sign.element}</span>
+          <div key={i} className="hairline-border rounded-xl p-4 flex flex-col items-center justify-center aspect-square hover:bg-parchment-2/50 transition-colors cursor-default group">
+            <span className="text-3xl text-gold-bronze mb-2 group-hover:text-gold-antique transition-colors">{sign.glyph}</span>
+            <span className="mono-tag text-royal-900 mb-1">{sign.name}</span>
+            <span className="text-[0.55rem] uppercase tracking-widest text-royal-800/50">{sign.element}</span>
           </div>
         ))}
       </div>
@@ -311,38 +311,62 @@ const ZodiacGrid12 = () => {
 };
 
 const PlanetsList = () => {
+  const [expandedPlanet, setExpandedPlanet] = React.useState<string | null>(null);
+  
   const planets = [
-    { name: "Sun", glyph: "☉", status: "Exalted", house: "10th" },
-    { name: "Moon", glyph: "☽", status: "Detriment", house: "4th" },
-    { name: "Mercury", glyph: "☿", status: "Domicile", house: "1st" },
-    { name: "Venus", glyph: "♀", status: "Fall", house: "7th" },
-    { name: "Mars", glyph: "♂", status: "Peregrine", house: "12th" },
+    { name: "Sun", glyph: "☉", status: "Exalted", house: "10th", sign: "Aries", aspects: "Trine Mars, Sextile Jupiter", interpretation: "A period of strong vitality and clear purpose. Your core identity aligns seamlessly with your public roles and ambitions." },
+    { name: "Moon", glyph: "☽", status: "Detriment", house: "4th", sign: "Cancer", aspects: "Square Venus", interpretation: "Emotional depths are stirred. Seek comfort in your roots, but be mindful of overindulgence in seeking harmony." },
+    { name: "Mercury", glyph: "☿", status: "Domicile", house: "1st", sign: "Gemini", aspects: "Conjunct Ascendant", interpretation: "Your mind is sharp and communicative. A perfect time for intellectual pursuits and expressing your ideas clearly." },
+    { name: "Venus", glyph: "♀", status: "Fall", house: "7th", sign: "Taurus", aspects: "Opposite Pluto", interpretation: "Intense relational dynamics. Transformative experiences in partnerships demand honesty and vulnerability." },
+    { name: "Mars", glyph: "♂", status: "Peregrine", house: "12th", sign: "Leo", aspects: "Trine Sun", interpretation: "Hidden drives and subconscious actions. Channel your fiery energy into spiritual or behind-the-scenes creative work." },
   ];
 
   return (
-    <div className="col-span-12 lg:col-span-4 hairline-border rounded-3xl p-8 bg-royal-900/20">
+    <div className="col-span-12 lg:col-span-4 hairline-border rounded-3xl p-8 bg-parchment-1/50">
       <div className="mb-8">
-        <h2 className="font-serif text-3xl text-parchment-0 mb-1">Planetary Nodes</h2>
-        <span className="mono-tag">CURRENT POSITIONS</span>
+        <h2 className="font-serif text-3xl text-ink-text mb-1">Planetary Nodes</h2>
+        <span className="mono-tag">CURRENT POSITIONS & ASPECTS</span>
       </div>
 
       <div className="flex flex-col gap-4">
         {planets.map((planet, i) => (
-          <div key={i} className="flex items-center justify-between p-4 hairline-border rounded-xl bg-royal-950/30">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full hairline-border flex items-center justify-center text-gold-antique text-lg">
-                {planet.glyph}
+          <div 
+            key={i} 
+            className="flex flex-col p-4 hairline-border rounded-xl bg-parchment-2/30 cursor-pointer hover:bg-parchment-2/50 transition-colors"
+            onClick={() => setExpandedPlanet(expandedPlanet === planet.name ? null : planet.name)}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full hairline-border flex items-center justify-center text-gold-bronze text-lg shrink-0">
+                  {planet.glyph}
+                </div>
+                <div>
+                  <div className="text-ink-text font-medium tracking-wide">{planet.name}</div>
+                  <div className="mono-tag mt-1">{planet.sign} // {planet.house} House</div>
+                </div>
               </div>
-              <div>
-                <div className="text-parchment-0 font-medium tracking-wide">{planet.name}</div>
-                <div className="mono-tag mt-1">{planet.house} House</div>
+              <div className="text-right">
+                <span className={`mono-tag ${planet.status === 'Exalted' || planet.status === 'Domicile' ? 'text-royal-700' : 'text-royal-800'}`}>
+                  {planet.status}
+                </span>
               </div>
             </div>
-            <div className="text-right">
-              <span className={`mono-tag ${planet.status === 'Exalted' || planet.status === 'Domicile' ? 'text-status-pale-blue' : 'text-parchment-2'}`}>
-                {planet.status}
-              </span>
-            </div>
+            
+            {expandedPlanet === planet.name && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="mt-4 pt-4 hairline-border-t overflow-hidden"
+              >
+                <div className="mb-2">
+                  <span className="mono-tag text-royal-700">ASPECTS: </span>
+                  <span className="mono-tag text-royal-900">{planet.aspects}</span>
+                </div>
+                <p className="font-serif italic text-royal-900/80 leading-relaxed">
+                  "{planet.interpretation}"
+                </p>
+              </motion.div>
+            )}
           </div>
         ))}
       </div>
@@ -359,24 +383,24 @@ const BaziPillarsPanel = () => {
   ];
 
   return (
-    <div className="col-span-12 md:col-span-6 hairline-border rounded-3xl p-8 bg-royal-900/20">
+    <div className="col-span-12 md:col-span-6 hairline-border rounded-3xl p-8 bg-parchment-1/50">
       <div className="mb-8">
-        <h2 className="font-serif text-3xl text-parchment-0 mb-1">BaZi Pillars</h2>
+        <h2 className="font-serif text-3xl text-ink-text mb-1">BaZi Pillars</h2>
         <span className="mono-tag">FOUR PILLARS OF DESTINY</span>
       </div>
 
       <div className="grid grid-cols-4 gap-2 md:gap-4">
         {pillars.map((pillar, i) => (
           <div key={i} className="flex flex-col items-center">
-            <span className="mono-tag mb-4 text-gold-antique">{pillar.title}</span>
-            <div className="w-full hairline-border rounded-2xl py-8 flex flex-col items-center justify-center bg-royal-950/50 gap-4">
-              <span className="text-3xl font-serif text-parchment-0">{pillar.char[0]}</span>
-              <div className="w-4 h-[1px] bg-gold-antique/30" />
-              <span className="text-3xl font-serif text-parchment-0">{pillar.char[1]}</span>
+            <span className="mono-tag mb-4 text-gold-bronze">{pillar.title}</span>
+            <div className="w-full hairline-border rounded-2xl py-8 flex flex-col items-center justify-center bg-parchment-2/30 gap-4">
+              <span className="text-3xl font-serif text-ink-text">{pillar.char[0]}</span>
+              <div className="w-4 h-[1px] bg-gold-bronze/30" />
+              <span className="text-3xl font-serif text-ink-text">{pillar.char[1]}</span>
             </div>
             <div className="mt-4 flex flex-col items-center gap-1">
-              <span className="text-xs text-parchment-1 uppercase tracking-wider">{pillar.stem}</span>
-              <span className="text-xs text-parchment-2 uppercase tracking-wider">{pillar.branch}</span>
+              <span className="text-xs text-royal-900 uppercase tracking-wider">{pillar.stem}</span>
+              <span className="text-xs text-royal-800 uppercase tracking-wider">{pillar.branch}</span>
             </div>
           </div>
         ))}
@@ -395,9 +419,9 @@ const WuxingBalancePanel = () => {
   ];
 
   return (
-    <div className="col-span-12 md:col-span-6 hairline-border rounded-3xl p-8 bg-royal-900/20">
+    <div className="col-span-12 md:col-span-6 hairline-border rounded-3xl p-8 bg-parchment-1/50">
       <div className="mb-8">
-        <h2 className="font-serif text-3xl text-parchment-0 mb-1">Wu Xing</h2>
+        <h2 className="font-serif text-3xl text-ink-text mb-1">Wu Xing</h2>
         <span className="mono-tag">FIVE ELEMENTS BALANCE</span>
       </div>
 
@@ -405,7 +429,7 @@ const WuxingBalancePanel = () => {
         {elements.map((el, i) => (
           <div key={i} className="flex items-center gap-4">
             <span className="mono-tag w-12 text-right">{el.name}</span>
-            <div className="flex-1 h-1 bg-royal-950 rounded-full overflow-hidden">
+            <div className="flex-1 h-1 bg-parchment-2 rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 whileInView={{ width: `${el.value}%` }}
@@ -413,7 +437,7 @@ const WuxingBalancePanel = () => {
                 className={`h-full ${el.color}`}
               />
             </div>
-            <span className="mono-tag w-8 text-gold-antique">{el.value}%</span>
+            <span className="mono-tag w-8 text-gold-bronze">{el.value}%</span>
           </div>
         ))}
       </div>
@@ -438,20 +462,20 @@ const HousesOverview12 = () => {
   ];
 
   return (
-    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-royal-900/20">
+    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h2 className="font-serif text-3xl text-parchment-0 mb-1">Astrological Houses</h2>
+          <h2 className="font-serif text-3xl text-ink-text mb-1">Astrological Houses</h2>
           <span className="mono-tag">MUNDANE SPHERES</span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {houses.map((house, i) => (
-          <div key={i} className="hairline-border rounded-xl p-4 flex flex-col items-center justify-center bg-royal-950/30">
-            <span className="font-serif text-2xl text-parchment-0 mb-2">{house.num}</span>
-            <span className="mono-tag text-gold-antique mb-2">{house.name}</span>
-            <span className="text-xl text-parchment-2/50">{house.sign}</span>
+          <div key={i} className="hairline-border rounded-xl p-4 flex flex-col items-center justify-center bg-parchment-1/40">
+            <span className="font-serif text-2xl text-ink-text mb-2">{house.num}</span>
+            <span className="mono-tag text-gold-bronze mb-2">{house.name}</span>
+            <span className="text-xl text-royal-800/50">{house.sign}</span>
           </div>
         ))}
       </div>
@@ -469,30 +493,30 @@ const PlanetDetails = () => {
   ];
 
   return (
-    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-royal-900/20">
+    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
       <div className="mb-8">
-        <h2 className="font-serif text-3xl text-parchment-0 mb-1">Planetary Dignities & Aspects</h2>
+        <h2 className="font-serif text-3xl text-ink-text mb-1">Planetary Dignities & Aspects</h2>
         <span className="mono-tag">DETAILED CELESTIAL ANALYSIS</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {planets.map((p, i) => (
-          <div key={i} className="hairline-border rounded-xl p-6 bg-royal-950/30 flex flex-col h-full">
+          <div key={i} className="hairline-border rounded-xl p-6 bg-parchment-1/40 flex flex-col h-full">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-full hairline-border flex items-center justify-center text-gold-antique text-2xl shrink-0">
+              <div className="w-12 h-12 rounded-full hairline-border flex items-center justify-center text-gold-bronze text-2xl shrink-0">
                 {p.glyph}
               </div>
               <div>
-                <div className="text-parchment-0 font-medium text-lg">{p.name}</div>
-                <div className="mono-tag text-parchment-2">{p.sign} // {p.house} House</div>
+                <div className="text-ink-text font-medium text-lg">{p.name}</div>
+                <div className="mono-tag text-royal-800">{p.sign} // {p.house} House</div>
               </div>
             </div>
             <div className="mb-4">
-              <span className="mono-tag text-status-pale-blue">ASPECTS: </span>
-              <span className="mono-tag text-parchment-1">{p.aspects}</span>
+              <span className="mono-tag text-royal-700">ASPECTS: </span>
+              <span className="mono-tag text-royal-900">{p.aspects}</span>
             </div>
             <div className="flex-1">
-              <p className="font-serif italic text-parchment-1/80 leading-relaxed text-lg">
+              <p className="font-serif italic text-royal-900/80 leading-relaxed text-lg">
                 "{p.interpretation}"
               </p>
             </div>
@@ -517,37 +541,37 @@ const PersonalizedInsights = () => {
   };
 
   return (
-    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-royal-900/20">
+    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
       <div className="mb-8">
-        <h2 className="font-serif text-3xl text-parchment-0 mb-1">Personalized Insights</h2>
+        <h2 className="font-serif text-3xl text-ink-text mb-1">Personalized Insights</h2>
         <span className="mono-tag">NATAL CHART SYNTHESIS</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-antique">BIRTH DATE</label>
+          <label className="mono-tag text-gold-bronze">BIRTH DATE</label>
           <input 
             type="date" 
-            className="bg-royal-950/50 hairline-border rounded-xl px-4 py-3 text-parchment-0 focus:outline-none focus:border-gold-antique/50 font-mono text-sm"
+            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
             value={formData.date}
             onChange={e => setFormData({...formData, date: e.target.value})}
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-antique">BIRTH TIME</label>
+          <label className="mono-tag text-gold-bronze">BIRTH TIME</label>
           <input 
             type="time" 
-            className="bg-royal-950/50 hairline-border rounded-xl px-4 py-3 text-parchment-0 focus:outline-none focus:border-gold-antique/50 font-mono text-sm"
+            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
             value={formData.time}
             onChange={e => setFormData({...formData, time: e.target.value})}
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-antique">LOCATION</label>
+          <label className="mono-tag text-gold-bronze">LOCATION</label>
           <input 
             type="text" 
             placeholder="e.g. Munich, DE"
-            className="bg-royal-950/50 hairline-border rounded-xl px-4 py-3 text-parchment-0 focus:outline-none focus:border-gold-antique/50 font-mono text-sm"
+            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
             value={formData.location}
             onChange={e => setFormData({...formData, location: e.target.value})}
           />
@@ -558,7 +582,7 @@ const PersonalizedInsights = () => {
         <button 
           onClick={handleGenerate}
           disabled={isGenerating}
-          className="px-8 py-3 rounded-full hairline-border bg-royal-900/50 text-parchment-0 font-serif tracking-widest uppercase hover:bg-gold-antique hover:text-royal-950 transition-all duration-300 disabled:opacity-50"
+          className="px-8 py-3 rounded-full hairline-border bg-parchment-2/40 text-ink-text font-serif tracking-widest uppercase hover:bg-gold-bronze hover:text-parchment-0 transition-all duration-300 disabled:opacity-50"
         >
           {isGenerating ? 'CALCULATING ALIGNMENTS...' : 'GENERATE SYNTHESIS'}
         </button>
@@ -568,10 +592,10 @@ const PersonalizedInsights = () => {
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="hairline-border rounded-2xl p-8 bg-royal-950/40 text-center relative overflow-hidden"
+          className="hairline-border rounded-2xl p-8 bg-parchment-1/50 text-center relative overflow-hidden"
         >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold-antique/30 to-transparent" />
-          <p className="font-serif italic text-2xl leading-relaxed text-parchment-1 max-w-3xl mx-auto">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold-bronze/30 to-transparent" />
+          <p className="font-serif italic text-2xl leading-relaxed text-royal-900 max-w-3xl mx-auto">
             "{insight}"
           </p>
         </motion.div>
@@ -582,7 +606,7 @@ const PersonalizedInsights = () => {
 
 export default function App() {
   return (
-    <div className="relative min-h-screen selection:bg-gold-antique/30 selection:text-parchment-0">
+    <div className="relative min-h-screen selection:bg-gold-bronze/30 selection:text-ink-text">
       <div className="parchment-texture" />
       <div className="noise-overlay" />
       
@@ -597,7 +621,6 @@ export default function App() {
           <div className="grid grid-cols-12 gap-6">
             <ZodiacGrid12 />
             <PlanetsList />
-            <PlanetDetails />
             <HousesOverview12 />
             <BaziPillarsPanel />
             <WuxingBalancePanel />
@@ -606,7 +629,7 @@ export default function App() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 flex justify-center mt-8">
-          <button className="px-8 py-4 rounded-full hairline-border bg-royal-900/50 text-parchment-0 font-serif tracking-widest uppercase hover:bg-gold-antique hover:text-royal-950 transition-all duration-300 flex items-center gap-3">
+          <button className="px-8 py-4 rounded-full hairline-border bg-parchment-2/40 text-ink-text font-serif tracking-widest uppercase hover:bg-gold-bronze hover:text-parchment-0 transition-all duration-300 flex items-center gap-3">
             <Star className="w-4 h-4" />
             Tiefenanalyse
           </button>
