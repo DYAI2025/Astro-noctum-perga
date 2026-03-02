@@ -1,12 +1,12 @@
 /**
  * ASTRO NOCTUM - PREMIUM OBSERVATORY DASHBOARD
- * 
+ *
  * 1) Executive Summary
- * Das Redesign von "Astro Noctum" transformiert die Plattform in ein ruhiges, systemisches "Observatorium der Sterne". 
- * Durch die Kombination von Royal Blue, Antique Gold und Pergament-Tönen entsteht eine "Quiet Luxury"-Ästhetik. 
- * Der Fokus liegt auf klaren, hauchdünnen Ephemeriden-Linien (Hairlines), großzügigem Whitespace und einer 
+ * Das Redesign von "Astro Noctum" transformiert die Plattform in ein ruhiges, systemisches "Observatorium der Sterne".
+ * Durch die Kombination von Royal Blue, Antique Gold und Pergament-Tönen entsteht eine "Quiet Luxury"-Ästhetik.
+ * Der Fokus liegt auf klaren, hauchdünnen Ephemeriden-Linien (Hairlines), großzügigem Whitespace und einer
  * strengen typografischen Hierarchie, die mystische Tiefe mit technologischer Präzision vereint.
- * 
+ *
  * 2) Informationsarchitektur (IA)
  * - System Header (Status, Koordinaten)
  * - Hero: Solar System Module (Orbital Overview)
@@ -19,7 +19,7 @@
  *   - BaZi Pillars (4 Pillars) [Col 6]
  *   - Wu Xing Balance (5 Elements) [Col 6]
  * - Primary CTA (Tiefenanalyse)
- * 
+ *
  * 3) Layout Blueprint
  * [ HEADER: Logo | Status | Coordinates ]
  * [-------------------------------------]
@@ -35,14 +35,14 @@
  * [ BAZI PILLARS (6)| WU XING (6)       ]
  * [-------------------------------------]
  * [ CTA: Tiefenanalyse                  ]
- * 
+ *
  * 4) Design System (Tokens)
  * - Parchment: #F4E9D6, #F1E3CC, #D9C7A8
  * - Royal Blue: #010103, #0E1B33, #162239, #1B2C4A
  * - Antique Gold: #826A4B, #A6895D, #CEB584, #EFD28A
  * - Status: #CFE3EA (Pale Blue)
  * - Typography: Inter (Sans), Cormorant Garamond (Serif), JetBrains Mono (Mono)
- * 
+ *
  * 5) Component Inventory
  * - SystemHeaderStatusBar: Sticky top, backdrop blur, mono tags
  * - HeroSolarSystemModule: Relative container, absolute rings/ticks, animated nodes
@@ -53,17 +53,17 @@
  * - HousesOverview12: 6-column grid, roman numerals
  * - BaziPillarsPanel: 4-column flex, vertical layout
  * - WuxingBalancePanel: Progress bars, percentage values
- * 
+ *
  * 6) Copy Deck (DE)
  * - Title: Astro Noctum
  * - Tags: SYSTEM ONLINE, ORBITAL OVERVIEW // EPOCH 2026, CELESTIAL ARCHITECTURE
  * - Insight: "Die Konstellationen flüstern von einer Zeit des Übergangs. Saturns Präsenz im zehnten Haus fordert Struktur, während die fließenden Wasser des Wu Xing zur Anpassung mahnen."
- * 
+ *
  * 7) Implementation Notes
  * - Stack: React + Tailwind CSS + Framer Motion
  * - Styling: Custom CSS variables in index.css, hairline utility classes
  * - Effects: SVG Noise filter overlay for texture, radial gradients for depth
- * 
+ *
  * 8) QA Checklist
  * [x] 0% Violet/Pink/Rosa
  * [x] Gold nur als Linie/Typo-Detail (keine Flächen)
@@ -102,7 +102,7 @@ const InteractiveStarfield = () => {
   }, []);
 
   const layers = React.useMemo(() => {
-    const generateStars = (count: number, depth: number) => 
+    const generateStars = (count: number, depth: number) =>
       Array.from({ length: count }).map((_, i) => ({
         id: `${depth}-${i}`,
         x: Math.random() * 100,
@@ -182,7 +182,7 @@ const DetailedSun = () => {
     <div className="relative w-28 h-28 rounded-full flex items-center justify-center">
       {/* Core glow */}
       <div className="absolute inset-0 rounded-full bg-[#FFF5D1] shadow-[0_0_60px_rgba(255,215,0,0.6),inset_0_0_20px_rgba(255,255,255,1)]" />
-      
+
       {/* Plasma surface layer 1 */}
       <svg className="absolute inset-0 w-full h-full rounded-full mix-blend-multiply opacity-80 animate-[spin_60s_linear_infinite]" viewBox="0 0 100 100">
         <defs>
@@ -247,15 +247,15 @@ const DetailedSun = () => {
 const HeroSolarSystemModule = () => (
   <section className="relative w-full h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden hairline-border-b">
     <InteractiveStarfield />
-    
+
     {/* Concentric Rings */}
     <div className="absolute inset-0 flex items-center justify-center opacity-20">
       {[1, 2, 3, 4, 5].map((ring) => (
-        <div 
+        <div
           key={ring}
           className="absolute rounded-full border border-gold-bronze"
-          style={{ 
-            width: `${ring * 20}%`, 
+          style={{
+            width: `${ring * 20}%`,
             height: `${ring * 20}%`,
             borderStyle: ring % 2 === 0 ? 'dashed' : 'solid',
             borderWidth: '1px'
@@ -263,11 +263,11 @@ const HeroSolarSystemModule = () => (
         />
       ))}
     </div>
-    
+
     {/* Radial Dividers */}
     <div className="absolute inset-0 flex items-center justify-center opacity-10">
       {[0, 30, 60, 90, 120, 150].map((deg) => (
-        <div 
+        <div
           key={deg}
           className="absolute w-full h-[1px] bg-gold-bronze"
           style={{ transform: `rotate(${deg}deg)` }}
@@ -278,7 +278,7 @@ const HeroSolarSystemModule = () => (
     {/* Ephemeris Ticks */}
     <div className="absolute inset-0 flex items-center justify-center opacity-20">
       {Array.from({ length: 72 }).map((_, i) => (
-        <div 
+        <div
           key={i}
           className="absolute w-[95%] h-[1px]"
           style={{ transform: `rotate(${i * 5}deg)` }}
@@ -323,7 +323,7 @@ const HeroSolarSystemModule = () => (
 
 const InsightCardQuotePanel = () => (
   <section className="w-full max-w-4xl mx-auto py-24 px-6 text-center">
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 1, delay: 0.2 }}
@@ -331,8 +331,8 @@ const InsightCardQuotePanel = () => (
     >
       <span className="absolute -top-12 left-1/2 -translate-x-1/2 text-6xl text-gold-bronze/20 font-serif">"</span>
       <p className="script-font text-3xl md:text-4xl leading-relaxed text-royal-900 max-w-3xl mx-auto">
-        Die Konstellationen flüstern von einer Zeit des Übergangs. 
-        <span className="gold-text"> Saturns Präsenz im zehnten Haus</span> fordert Struktur, 
+        Die Konstellationen flüstern von einer Zeit des Übergangs.
+        <span className="gold-text"> Saturns Präsenz im zehnten Haus</span> fordert Struktur,
         während die fließenden Wasser des Wu Xing zur Anpassung mahnen.
       </p>
       <div className="mt-8 flex items-center justify-center gap-4">
@@ -412,18 +412,18 @@ const ZodiacMatrix = ({ data }: { data: any }) => {
     <div className="col-span-12 space-y-8">
       {/* Row 1: Major Tiles */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <MajorTile 
-          title="SUN SIGN" 
-          value={zodiacData.sun_sign} 
-          glyph={getZodiacGlyph(zodiacData.sun_sign)} 
-          subtitle="Western Astrology" 
+        <MajorTile
+          title="SUN SIGN"
+          value={zodiacData.sun_sign}
+          glyph={getZodiacGlyph(zodiacData.sun_sign)}
+          subtitle="Western Astrology"
         />
-        <MajorTile 
-          title="YEAR ANIMAL" 
-          value={zodiacData.bazi_year} 
-          glyph={getBaziGlyph(zodiacData.bazi_year)} 
+        <MajorTile
+          title="YEAR ANIMAL"
+          value={zodiacData.bazi_year}
+          glyph={getBaziGlyph(zodiacData.bazi_year)}
           char={zodiacData.bazi_year_char}
-          subtitle="BaZi / Chinese" 
+          subtitle="BaZi / Chinese"
         />
       </div>
 
@@ -465,7 +465,7 @@ const getBaziGlyph = (animal: string) => {
 
 const PlanetsList = () => {
   const [expandedPlanet, setExpandedPlanet] = React.useState<string | null>(null);
-  
+
   const planets = [
     { name: "Sun", glyph: "☉", status: "Exalted", house: "10th", sign: "Aries", aspects: "Trine Mars, Sextile Jupiter", interpretation: "A period of strong vitality and clear purpose. Your core identity aligns seamlessly with your public roles and ambitions." },
     { name: "Moon", glyph: "☽", status: "Detriment", house: "4th", sign: "Cancer", aspects: "Square Venus", interpretation: "Emotional depths are stirred. Seek comfort in your roots, but be mindful of overindulgence in seeking harmony." },
@@ -483,8 +483,8 @@ const PlanetsList = () => {
 
       <div className="flex flex-col gap-4">
         {planets.map((planet, i) => (
-          <div 
-            key={i} 
+          <div
+            key={i}
             className="flex flex-col p-4 hairline-border rounded-xl bg-parchment-2/30 cursor-pointer hover:bg-parchment-2/50 transition-colors"
             onClick={() => setExpandedPlanet(expandedPlanet === planet.name ? null : planet.name)}
           >
@@ -504,9 +504,9 @@ const PlanetsList = () => {
                 </span>
               </div>
             </div>
-            
+
             {expandedPlanet === planet.name && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 className="mt-4 pt-4 hairline-border-t overflow-hidden"
@@ -548,7 +548,7 @@ const WuxingBalancePanel = () => {
           <div key={i} className="flex items-center gap-4">
             <span className="mono-tag w-12 text-right">{el.name}</span>
             <div className="flex-1 h-1 bg-parchment-2 rounded-full overflow-hidden">
-              <motion.div 
+              <motion.div
                 initial={{ width: 0 }}
                 whileInView={{ width: `${el.value}%` }}
                 transition={{ duration: 1, delay: i * 0.1 }}
@@ -601,6 +601,105 @@ const HousesOverview12 = () => {
   );
 };
 
+const PersonalizedInsights = () => {
+  const [formData, setFormData] = React.useState({ date: '', time: '', location: '' });
+  const [insight, setInsight] = React.useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    setError(null);
+    try {
+      const { createChart, generateInsight, registerUser } = await import('./api.js');
+      await registerUser();
+      const chart = await createChart({
+        birth_date: formData.date,
+        birth_time: formData.time,
+        location_name: formData.location,
+        tz_id: 'Europe/Berlin',
+        geo_lon_deg: 11.5754,
+        geo_lat_deg: 48.1371,
+      });
+      const result = await generateInsight(chart.id);
+      setInsight(result.content);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate insight');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
+      <div className="mb-8">
+        <h2 className="font-serif text-3xl text-ink-text mb-1">Personalized Insights</h2>
+        <span className="mono-tag">NATAL CHART SYNTHESIS</span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="flex flex-col gap-2">
+          <label className="mono-tag text-gold-bronze">BIRTH DATE</label>
+          <input
+            type="date"
+            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
+            value={formData.date}
+            onChange={e => setFormData({...formData, date: e.target.value})}
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="mono-tag text-gold-bronze">BIRTH TIME</label>
+          <input
+            type="time"
+            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
+            value={formData.time}
+            onChange={e => setFormData({...formData, time: e.target.value})}
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="mono-tag text-gold-bronze">LOCATION</label>
+          <input
+            type="text"
+            placeholder="e.g. Munich, DE"
+            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
+            value={formData.location}
+            onChange={e => setFormData({...formData, location: e.target.value})}
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-center mb-8">
+        <button
+          onClick={handleGenerate}
+          disabled={isGenerating}
+          className="px-8 py-3 rounded-full hairline-border bg-parchment-2/40 text-ink-text font-serif tracking-widest uppercase hover:bg-gold-bronze hover:text-parchment-0 transition-all duration-300 disabled:opacity-50"
+        >
+          {isGenerating ? 'CALCULATING ALIGNMENTS...' : 'GENERATE SYNTHESIS'}
+        </button>
+      </div>
+
+      {error && (
+        <div className="hairline-border rounded-2xl p-6 bg-red-50/50 text-center mb-4">
+          <p className="mono-tag text-red-800">{error}</p>
+        </div>
+      )}
+
+      {insight && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="hairline-border rounded-2xl p-8 bg-parchment-1/50 text-center relative overflow-hidden"
+        >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold-bronze/30 to-transparent" />
+          <p className="font-serif italic text-2xl leading-relaxed text-royal-900 max-w-3xl mx-auto">
+            "{insight}"
+          </p>
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
 export default function App() {
   const [astroProfile, setAstroProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -612,7 +711,7 @@ export default function App() {
           .from('astro_profile')
           .select('*')
           .single();
-        
+
         if (error) throw error;
         setAstroProfile(data);
       } catch (err) {
@@ -629,14 +728,14 @@ export default function App() {
     <div className="relative min-h-screen selection:bg-gold-bronze/30 selection:text-ink-text">
       <div className="parchment-texture" />
       <div className="noise-overlay" />
-      
+
       <SystemHeaderStatusBar />
-      
+
       <main className="pb-24">
         <HeroSolarSystemModule />
         <InsightCardQuotePanel />
         <KPIStrip />
-        
+
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid grid-cols-12 gap-6">
             {loading ? (
@@ -648,6 +747,7 @@ export default function App() {
               <ZodiacMatrix data={astroProfile} />
             )}
             <PlanetsList />
+            <PersonalizedInsights />
           </div>
         </div>
 
