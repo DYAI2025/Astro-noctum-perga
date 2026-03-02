@@ -30,9 +30,9 @@
  * [-------------------------------------]
  * [ KPI 1 | KPI 2 | KPI 3               ]
  * [-------------------------------------]
- * [ ZODIAC GRID (8) | PLANETS LIST (4)  ]
- * [ HOUSES OVERVIEW (12)                ]
- * [ BAZI PILLARS (6)| WU XING (6)       ]
+ * [ ZODIAC MATRIX (12)                  ]
+ * [ PLANETS LIST (12)                   ]
+ * [ PERSONALIZED INSIGHTS (12)          ]
  * [-------------------------------------]
  * [ CTA: Tiefenanalyse                  ]
  *
@@ -54,13 +54,11 @@
  * - BaziPillarsPanel: 4-column flex, vertical layout
  * - WuxingBalancePanel: Progress bars, percentage values
  *
- * 6) Copy Deck (DE)
- * - Title: Astro Noctum
- * - Tags: SYSTEM ONLINE, ORBITAL OVERVIEW // EPOCH 2026, CELESTIAL ARCHITECTURE
- * - Insight: "Die Konstellationen flüstern von einer Zeit des Übergangs. Saturns Präsenz im zehnten Haus fordert Struktur, während die fließenden Wasser des Wu Xing zur Anpassung mahnen."
+ * 6) All visible copy is sourced from src/content.ts – edit that file to
+ *    adapt any text, label, or data value without touching component logic.
  *
  * 7) Implementation Notes
- * - Stack: React + Tailwind CSS + Framer Motion
+ * - Stack: React + Tailwind CSS + Motion
  * - Styling: Custom CSS variables in index.css, hairline utility classes
  * - Effects: SVG Noise filter overlay for texture, radial gradients for depth
  *
@@ -77,9 +75,31 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { Compass, Moon, Sun, Star, Activity, Eye, Zap } from 'lucide-react';
-import { supabase } from './supabase';
+import { Compass, Star } from 'lucide-react';
+import { getSupabase } from './supabase';
+import {
+  BRAND,
+  HERO_COORDINATES,
+  INSIGHT_QUOTE,
+  KPI_ITEMS,
+  DEFAULT_ZODIAC,
+  ZODIAC_GLYPHS,
+  BAZI_GLYPHS,
+  ZODIAC_TILE_LABELS,
+  PLANETS,
+  PLANETS_PANEL,
+  HOUSES,
+  HOUSES_PANEL,
+  WUXING_ELEMENTS,
+  WUXING_PANEL,
+  INSIGHTS_FORM,
+  CTA,
+  MESSAGES,
+} from './content';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Interactive Starfield
+// ─────────────────────────────────────────────────────────────────────────────
 const InteractiveStarfield = () => {
   const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
   const [activeStar, setActiveStar] = React.useState<string | null>(null);
@@ -109,7 +129,7 @@ const InteractiveStarfield = () => {
         y: Math.random() * 100,
         size: Math.random() * (depth === 1 ? 1 : depth === 2 ? 2 : 3) + 0.5,
         info: `Celestial Body ${depth}-${i}: RA ${Math.floor(Math.random() * 24)}h, Dec ${Math.floor(Math.random() * 90)}°`,
-        color: Math.random() > 0.8 ? 'bg-gold-bronze' : 'bg-royal-900'
+        isGold: Math.random() > 0.8,
       }));
 
     return [
@@ -134,13 +154,16 @@ const InteractiveStarfield = () => {
           {layer.stars.map((star) => (
             <div
               key={star.id}
-              className={`absolute rounded-full ${star.color} cursor-pointer hover:bg-gold-antique transition-colors hover:scale-150`}
+              className="absolute rounded-full cursor-pointer transition-transform hover:scale-150"
               style={{
                 left: `${star.x}%`,
                 top: `${star.y}%`,
                 width: star.size,
                 height: star.size,
-                boxShadow: star.color === 'bg-gold-bronze' ? '0 0 6px rgba(130,106,75,0.4)' : '0 0 4px rgba(14, 27, 51, 0.2)'
+                backgroundColor: star.isGold ? '#826A4B' : '#0E1B33',
+                boxShadow: star.isGold
+                  ? '0 0 6px rgba(130,106,75,0.4)'
+                  : '0 0 4px rgba(14, 27, 51, 0.2)',
               }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -148,7 +171,10 @@ const InteractiveStarfield = () => {
               }}
             >
               {activeStar === star.id && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-48 p-3 hairline-border bg-parchment-0/90 backdrop-blur-md rounded-lg z-50 shadow-lg" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="absolute top-4 left-1/2 -translate-x-1/2 w-48 p-3 hairline-border bg-parchment-0/90 backdrop-blur-md rounded-lg z-50 shadow-lg"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <p className="mono-tag text-gold-bronze mb-1">STAR DATA</p>
                   <p className="font-serif text-sm text-ink-text">{star.info}</p>
                 </div>
@@ -161,89 +187,96 @@ const InteractiveStarfield = () => {
   );
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// System Header
+// ─────────────────────────────────────────────────────────────────────────────
 const SystemHeaderStatusBar = () => (
   <header className="w-full hairline-border-b py-3 px-6 flex justify-between items-center bg-parchment-0/50 backdrop-blur-md sticky top-0 z-40">
     <div className="flex items-center gap-4">
       <Compass className="w-4 h-4 text-gold-bronze" />
-      <span className="mono-tag">ASTRO NOCTUM // OBSERVATORY</span>
+      <span className="mono-tag">{BRAND.headerLabel}</span>
     </div>
     <div className="flex items-center gap-6">
       <span className="mono-tag flex items-center gap-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-royal-700 animate-pulse"></span>
-        SYSTEM ONLINE
+        <span className="w-1.5 h-1.5 rounded-full bg-royal-700 animate-pulse" />
+        {BRAND.systemStatus}
       </span>
-      <span className="mono-tag text-royal-800">LAT: 48.1371° N // LON: 11.5754° E</span>
+      <span className="mono-tag text-royal-800">{BRAND.coordinates}</span>
     </div>
   </header>
 );
 
-const DetailedSun = () => {
-  return (
-    <div className="relative w-28 h-28 rounded-full flex items-center justify-center">
-      {/* Core glow */}
-      <div className="absolute inset-0 rounded-full bg-[#FFF5D1] shadow-[0_0_60px_rgba(255,215,0,0.6),inset_0_0_20px_rgba(255,255,255,1)]" />
+// ─────────────────────────────────────────────────────────────────────────────
+// Animated Sun (DetailedSun)
+// ─────────────────────────────────────────────────────────────────────────────
+const DetailedSun = () => (
+  <div className="relative w-28 h-28 rounded-full flex items-center justify-center">
+    {/* Core glow */}
+    <div className="absolute inset-0 rounded-full bg-[#FFF5D1] shadow-[0_0_60px_rgba(255,215,0,0.6),inset_0_0_20px_rgba(255,255,255,1)]" />
 
-      {/* Plasma surface layer 1 */}
-      <svg className="absolute inset-0 w-full h-full rounded-full mix-blend-multiply opacity-80 animate-[spin_60s_linear_infinite]" viewBox="0 0 100 100">
-        <defs>
-          <filter id="plasma-1">
-            <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="4" seed="1" result="noise">
-              <animate attributeName="baseFrequency" values="0.05;0.07;0.05" dur="20s" repeatCount="indefinite" />
-            </feTurbulence>
-            <feColorMatrix in="noise" type="matrix" values="
-              1 0 0 0 0.8
-              0 1 0 0 0.4
-              0 0 1 0 0
-              0 0 0 3 -1" result="coloredNoise" />
-            <feComposite in="coloredNoise" in2="SourceGraphic" operator="in" />
-          </filter>
-        </defs>
-        <circle cx="50" cy="50" r="50" fill="white" filter="url(#plasma-1)" />
-      </svg>
+    {/* Plasma surface layer 1 */}
+    <svg className="absolute inset-0 w-full h-full rounded-full mix-blend-multiply opacity-80 animate-[spin_60s_linear_infinite]" viewBox="0 0 100 100">
+      <defs>
+        <filter id="plasma-1">
+          <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="4" seed="1" result="noise">
+            <animate attributeName="baseFrequency" values="0.05;0.07;0.05" dur="20s" repeatCount="indefinite" />
+          </feTurbulence>
+          <feColorMatrix in="noise" type="matrix" values="
+            1 0 0 0 0.8
+            0 1 0 0 0.4
+            0 0 1 0 0
+            0 0 0 3 -1" result="coloredNoise" />
+          <feComposite in="coloredNoise" in2="SourceGraphic" operator="in" />
+        </filter>
+      </defs>
+      <circle cx="50" cy="50" r="50" fill="white" filter="url(#plasma-1)" />
+    </svg>
 
-      {/* Plasma surface layer 2 (counter-rotating) */}
-      <svg className="absolute inset-0 w-full h-full rounded-full mix-blend-color-burn opacity-60 animate-[spin_40s_linear_infinite_reverse]" viewBox="0 0 100 100">
-        <defs>
-          <filter id="plasma-2">
-            <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="3" seed="2" result="noise">
-              <animate attributeName="baseFrequency" values="0.08;0.06;0.08" dur="15s" repeatCount="indefinite" />
-            </feTurbulence>
-            <feColorMatrix in="noise" type="matrix" values="
-              1 0 0 0 0.9
-              0 1 0 0 0.2
-              0 0 1 0 0
-              0 0 0 4 -1.5" result="coloredNoise" />
-            <feComposite in="coloredNoise" in2="SourceGraphic" operator="in" />
-          </filter>
-        </defs>
-        <circle cx="50" cy="50" r="50" fill="white" filter="url(#plasma-2)" />
-      </svg>
+    {/* Plasma surface layer 2 (counter-rotating) */}
+    <svg className="absolute inset-0 w-full h-full rounded-full mix-blend-color-burn opacity-60 animate-[spin_40s_linear_infinite_reverse]" viewBox="0 0 100 100">
+      <defs>
+        <filter id="plasma-2">
+          <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="3" seed="2" result="noise">
+            <animate attributeName="baseFrequency" values="0.08;0.06;0.08" dur="15s" repeatCount="indefinite" />
+          </feTurbulence>
+          <feColorMatrix in="noise" type="matrix" values="
+            1 0 0 0 0.9
+            0 1 0 0 0.2
+            0 0 1 0 0
+            0 0 0 4 -1.5" result="coloredNoise" />
+          <feComposite in="coloredNoise" in2="SourceGraphic" operator="in" />
+        </filter>
+      </defs>
+      <circle cx="50" cy="50" r="50" fill="white" filter="url(#plasma-2)" />
+    </svg>
 
-      {/* Solar flares / Coronal mass ejections (subtle) */}
-      <svg className="absolute -inset-4 w-[calc(100%+2rem)] h-[calc(100%+2rem)] mix-blend-screen opacity-50 animate-[spin_90s_linear_infinite]" viewBox="0 0 120 120">
-        <defs>
-          <filter id="flares">
-            <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="3" result="noise">
-              <animate attributeName="baseFrequency" values="0.03;0.05;0.03" dur="25s" repeatCount="indefinite" />
-            </feTurbulence>
-            <feColorMatrix in="noise" type="matrix" values="
-              1 0 0 0 0.9
-              0 1 0 0 0.5
-              0 0 1 0 0
-              0 0 0 2 -1" result="coloredNoise" />
-            <feGaussianBlur in="coloredNoise" stdDeviation="2" result="blurred" />
-            <feComposite in="blurred" in2="SourceGraphic" operator="in" />
-          </filter>
-        </defs>
-        <circle cx="60" cy="60" r="55" fill="white" filter="url(#flares)" />
-      </svg>
+    {/* Solar flares / Coronal mass ejections */}
+    <svg className="absolute -inset-4 w-[calc(100%+2rem)] h-[calc(100%+2rem)] mix-blend-screen opacity-50 animate-[spin_90s_linear_infinite]" viewBox="0 0 120 120">
+      <defs>
+        <filter id="flares">
+          <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="3" result="noise">
+            <animate attributeName="baseFrequency" values="0.03;0.05;0.03" dur="25s" repeatCount="indefinite" />
+          </feTurbulence>
+          <feColorMatrix in="noise" type="matrix" values="
+            1 0 0 0 0.9
+            0 1 0 0 0.5
+            0 0 1 0 0
+            0 0 0 2 -1" result="coloredNoise" />
+          <feGaussianBlur in="coloredNoise" stdDeviation="2" result="blurred" />
+          <feComposite in="blurred" in2="SourceGraphic" operator="in" />
+        </filter>
+      </defs>
+      <circle cx="60" cy="60" r="55" fill="white" filter="url(#flares)" />
+    </svg>
 
-      {/* Spherical shading */}
-      <div className="absolute inset-0 rounded-full shadow-[inset_-10px_-10px_20px_rgba(139,0,0,0.6),inset_10px_10px_20px_rgba(255,255,255,0.8)] mix-blend-overlay" />
-    </div>
-  );
-};
+    {/* Spherical shading */}
+    <div className="absolute inset-0 rounded-full shadow-[inset_-10px_-10px_20px_rgba(139,0,0,0.6),inset_10px_10px_20px_rgba(255,255,255,0.8)] mix-blend-overlay" />
+  </div>
+);
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Hero Solar System Module
+// ─────────────────────────────────────────────────────────────────────────────
 const HeroSolarSystemModule = () => (
   <section className="relative w-full h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden hairline-border-b">
     <InteractiveStarfield />
@@ -258,7 +291,7 @@ const HeroSolarSystemModule = () => (
             width: `${ring * 20}%`,
             height: `${ring * 20}%`,
             borderStyle: ring % 2 === 0 ? 'dashed' : 'solid',
-            borderWidth: '1px'
+            borderWidth: '1px',
           }}
         />
       ))}
@@ -275,7 +308,7 @@ const HeroSolarSystemModule = () => (
       ))}
     </div>
 
-    {/* Ephemeris Ticks */}
+    {/* Ephemeris Ticks – use inline style to avoid dynamic Tailwind class purging */}
     <div className="absolute inset-0 flex items-center justify-center opacity-20">
       {Array.from({ length: 72 }).map((_, i) => (
         <div
@@ -283,23 +316,26 @@ const HeroSolarSystemModule = () => (
           className="absolute w-[95%] h-[1px]"
           style={{ transform: `rotate(${i * 5}deg)` }}
         >
-          <div className={`w-${i % 6 === 0 ? '3' : '1'} h-full bg-gold-bronze`} />
+          <div
+            className="h-full bg-gold-bronze"
+            style={{ width: i % 6 === 0 ? '0.75rem' : '0.25rem' }}
+          />
         </div>
       ))}
     </div>
 
     {/* Coordinate Labels */}
-    <div className="absolute top-8 left-1/2 -translate-x-1/2 mono-tag text-gold-bronze/50">0° ARIES</div>
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 mono-tag text-gold-bronze/50">180° LIBRA</div>
-    <div className="absolute left-8 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/50 -rotate-90">90° CANCER</div>
-    <div className="absolute right-8 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/50 rotate-90">270° CAPRICORN</div>
+    <div className="absolute top-8 left-1/2 -translate-x-1/2 mono-tag text-gold-bronze/50">{HERO_COORDINATES.top}</div>
+    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 mono-tag text-gold-bronze/50">{HERO_COORDINATES.bottom}</div>
+    <div className="absolute left-8 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/50 -rotate-90">{HERO_COORDINATES.left}</div>
+    <div className="absolute right-8 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/50 rotate-90">{HERO_COORDINATES.right}</div>
 
     {/* Center Seal */}
     <div className="relative z-10 w-32 h-32 rounded-full hairline-border flex items-center justify-center bg-parchment-0/80 backdrop-blur-sm shadow-[0_0_40px_rgba(130,106,75,0.1)]">
       <DetailedSun />
     </div>
 
-    {/* Planets (Decorative) */}
+    {/* Decorative Planets */}
     <div className="absolute z-10 w-full h-full flex items-center justify-center pointer-events-none">
       <div className="absolute w-[40%] h-[40%] animate-[spin_60s_linear_infinite]">
         <div className="absolute -top-2 left-1/2 w-4 h-4 rounded-full bg-royal-700 shadow-[0_0_10px_rgba(27,44,74,0.3)]" />
@@ -314,13 +350,16 @@ const HeroSolarSystemModule = () => (
 
     <div className="absolute bottom-8 left-8">
       <h1 className="font-serif text-5xl md:text-7xl font-light tracking-tight text-ink-text mb-2">
-        Astro Noctum
+        {BRAND.heroTitle}
       </h1>
-      <p className="mono-tag text-gold-bronze">ORBITAL OVERVIEW // EPOCH 2026</p>
+      <p className="mono-tag text-gold-bronze">{BRAND.epochTag}</p>
     </div>
   </section>
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Insight Quote Panel
+// ─────────────────────────────────────────────────────────────────────────────
 const InsightCardQuotePanel = () => (
   <section className="w-full max-w-4xl mx-auto py-24 px-6 text-center">
     <motion.div
@@ -331,27 +370,26 @@ const InsightCardQuotePanel = () => (
     >
       <span className="absolute -top-12 left-1/2 -translate-x-1/2 text-6xl text-gold-bronze/20 font-serif">"</span>
       <p className="script-font text-3xl md:text-4xl leading-relaxed text-royal-900 max-w-3xl mx-auto">
-        Die Konstellationen flüstern von einer Zeit des Übergangs.
-        <span className="gold-text"> Saturns Präsenz im zehnten Haus</span> fordert Struktur,
-        während die fließenden Wasser des Wu Xing zur Anpassung mahnen.
+        {INSIGHT_QUOTE.main}
+        <span className="gold-text">{INSIGHT_QUOTE.highlight}</span>
+        {INSIGHT_QUOTE.continuation}
       </p>
       <div className="mt-8 flex items-center justify-center gap-4">
         <div className="w-12 h-[1px] bg-gold-bronze/30" />
-        <span className="mono-tag text-gold-bronze">SYNTHESIS</span>
+        <span className="mono-tag text-gold-bronze">{INSIGHT_QUOTE.dividerLabel}</span>
         <div className="w-12 h-[1px] bg-gold-bronze/30" />
       </div>
     </motion.div>
   </section>
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// KPI Strip
+// ─────────────────────────────────────────────────────────────────────────────
 const KPIStrip = () => (
-  <section className="w-full hairline-border-y bg-parchment-1/30">
+  <section className="w-full hairline-border-t hairline-border-b bg-parchment-1/30">
     <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gold-bronze/20">
-      {[
-        { label: "RESONANZ", value: "87%", icon: Activity },
-        { label: "FOKUS", value: "ZENITH", icon: Eye },
-        { label: "ENERGIE", value: "STEIGEND", icon: Zap }
-      ].map((kpi, i) => (
+      {KPI_ITEMS.map((kpi, i) => (
         <div key={i} className="p-8 flex flex-col items-center justify-center text-center">
           <kpi.icon className="w-5 h-5 text-gold-bronze mb-4 opacity-70" />
           <span className="mono-tag mb-2">{kpi.label}</span>
@@ -362,7 +400,28 @@ const KPIStrip = () => (
   </section>
 );
 
-const MajorTile = ({ title, value, glyph, subtitle, char }: { title: string, value: string, glyph: string, subtitle: string, char?: string }) => (
+// ─────────────────────────────────────────────────────────────────────────────
+// Zodiac tile helpers
+// ─────────────────────────────────────────────────────────────────────────────
+const getZodiacGlyph = (sign: string) => ZODIAC_GLYPHS[sign] ?? '✨';
+const getBaziGlyph   = (animal: string) => BAZI_GLYPHS[animal] ?? '🏮';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Zodiac tile components
+// ─────────────────────────────────────────────────────────────────────────────
+const MajorTile = ({
+  title,
+  value,
+  glyph,
+  subtitle,
+  char,
+}: {
+  title: string;
+  value: string;
+  glyph: string;
+  subtitle: string;
+  char?: string;
+}) => (
   <div className="hairline-border rounded-3xl p-8 bg-parchment-1/50 relative overflow-hidden group hover:bg-parchment-2/40 transition-all duration-500">
     <div className="absolute top-0 right-0 w-32 h-32 bg-gold-bronze/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-gold-bronze/10 transition-all" />
     <div className="flex justify-between items-start mb-6">
@@ -382,61 +441,65 @@ const MajorTile = ({ title, value, glyph, subtitle, char }: { title: string, val
   </div>
 );
 
-const SecondaryTile = ({ title, value, glyph, subtitle }: { title: string, value: string, glyph: string, subtitle?: string }) => (
+const SecondaryTile = ({
+  title,
+  value,
+  glyph,
+  subtitle,
+}: {
+  title: string;
+  value: string;
+  glyph: string;
+  subtitle?: string;
+}) => (
   <div className="hairline-border rounded-2xl p-6 bg-parchment-1/40 hover:bg-parchment-2/30 transition-all group">
     <div className="flex flex-col items-center text-center">
       <span className="mono-tag text-[0.6rem] text-gold-bronze mb-3">{title}</span>
       <span className="text-3xl text-gold-bronze mb-3 group-hover:scale-110 transition-transform">{glyph}</span>
       <span className="font-serif text-xl text-ink-text">{value}</span>
-      {subtitle && <span className="text-[0.6rem] uppercase tracking-widest text-royal-800/40 mt-1">{subtitle}</span>}
+      {subtitle && (
+        <span className="text-[0.6rem] uppercase tracking-widest text-royal-800/40 mt-1">{subtitle}</span>
+      )}
     </div>
   </div>
 );
 
-const ZodiacMatrix = ({ data }: { data: any }) => {
-  const zodiacData = data || {
-    sun_sign: "Aries",
-    bazi_year: "Dragon",
-    bazi_year_char: "甲辰",
-    ascendant: "Gemini",
-    moon_sign: "Cancer",
-    bazi_month: "Snake",
-    bazi_month_char: "巳",
-    day_master: "Earth",
-    day_master_char: "戊",
-    hour_master: "Metal",
-    hour_master_char: "庚"
-  };
+// ─────────────────────────────────────────────────────────────────────────────
+// Zodiac Matrix (main data grid)
+// ─────────────────────────────────────────────────────────────────────────────
+const ZodiacMatrix = ({ data }: { data: Record<string, string> | null }) => {
+  const z = data ?? DEFAULT_ZODIAC;
+  const tl = ZODIAC_TILE_LABELS;
 
   return (
     <div className="col-span-12 space-y-8">
       {/* Row 1: Major Tiles */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <MajorTile
-          title="SUN SIGN"
-          value={zodiacData.sun_sign}
-          glyph={getZodiacGlyph(zodiacData.sun_sign)}
-          subtitle="Western Astrology"
+          title={tl.sunSign.title}
+          value={z.sun_sign}
+          glyph={getZodiacGlyph(z.sun_sign)}
+          subtitle={tl.sunSign.subtitle}
         />
         <MajorTile
-          title="YEAR ANIMAL"
-          value={zodiacData.bazi_year}
-          glyph={getBaziGlyph(zodiacData.bazi_year)}
-          char={zodiacData.bazi_year_char}
-          subtitle="BaZi / Chinese"
+          title={tl.yearAnimal.title}
+          value={z.bazi_year}
+          glyph={getBaziGlyph(z.bazi_year)}
+          char={z.bazi_year_char}
+          subtitle={tl.yearAnimal.subtitle}
         />
       </div>
 
       {/* Row 2: Secondary Tiles */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <SecondaryTile title="ASCENDANT" value={zodiacData.ascendant} glyph={getZodiacGlyph(zodiacData.ascendant)} />
-        <SecondaryTile title="MOON SIGN" value={zodiacData.moon_sign} glyph={getZodiacGlyph(zodiacData.moon_sign)} />
-        <SecondaryTile title="MONTH ANIMAL" value={zodiacData.bazi_month} glyph={getBaziGlyph(zodiacData.bazi_month)} />
-        <SecondaryTile title="DAY MASTER" value={zodiacData.day_master} glyph={zodiacData.day_master_char || "戊"} />
-        <SecondaryTile title="HOUR MASTER" value={zodiacData.hour_master} glyph={zodiacData.hour_master_char || "庚"} />
+        <SecondaryTile title={tl.ascendant.title}   value={z.ascendant}   glyph={getZodiacGlyph(z.ascendant)} />
+        <SecondaryTile title={tl.moonSign.title}    value={z.moon_sign}   glyph={getZodiacGlyph(z.moon_sign)} />
+        <SecondaryTile title={tl.monthAnimal.title} value={z.bazi_month}  glyph={getBaziGlyph(z.bazi_month)} />
+        <SecondaryTile title={tl.dayMaster.title}   value={z.day_master}  glyph={z.day_master_char || '戊'} />
+        <SecondaryTile title={tl.hourMaster.title}  value={z.hour_master} glyph={z.hour_master_char || '庚'} />
       </div>
 
-      {/* Row 3: Detailed Panels */}
+      {/* Row 3: Detail Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <HousesOverview12 />
         <WuxingBalancePanel />
@@ -445,46 +508,23 @@ const ZodiacMatrix = ({ data }: { data: any }) => {
   );
 };
 
-const getZodiacGlyph = (sign: string) => {
-  const glyphs: Record<string, string> = {
-    "Aries": "♈", "Taurus": "♉", "Gemini": "♊", "Cancer": "♋",
-    "Leo": "♌", "Virgo": "♍", "Libra": "♎", "Scorpio": "♏",
-    "Sagittarius": "♐", "Capricorn": "♑", "Aquarius": "♒", "Pisces": "♓"
-  };
-  return glyphs[sign] || "✨";
-};
-
-const getBaziGlyph = (animal: string) => {
-  const glyphs: Record<string, string> = {
-    "Rat": "子", "Ox": "丑", "Tiger": "寅", "Rabbit": "卯",
-    "Dragon": "辰", "Snake": "巳", "Horse": "午", "Goat": "未",
-    "Monkey": "申", "Rooster": "酉", "Dog": "戌", "Pig": "亥"
-  };
-  return glyphs[animal] || "🏮";
-};
-
+// ─────────────────────────────────────────────────────────────────────────────
+// Planets List
+// ─────────────────────────────────────────────────────────────────────────────
 const PlanetsList = () => {
   const [expandedPlanet, setExpandedPlanet] = React.useState<string | null>(null);
 
-  const planets = [
-    { name: "Sun", glyph: "☉", status: "Exalted", house: "10th", sign: "Aries", aspects: "Trine Mars, Sextile Jupiter", interpretation: "A period of strong vitality and clear purpose. Your core identity aligns seamlessly with your public roles and ambitions." },
-    { name: "Moon", glyph: "☽", status: "Detriment", house: "4th", sign: "Cancer", aspects: "Square Venus", interpretation: "Emotional depths are stirred. Seek comfort in your roots, but be mindful of overindulgence in seeking harmony." },
-    { name: "Mercury", glyph: "☿", status: "Domicile", house: "1st", sign: "Gemini", aspects: "Conjunct Ascendant", interpretation: "Your mind is sharp and communicative. A perfect time for intellectual pursuits and expressing your ideas clearly." },
-    { name: "Venus", glyph: "♀", status: "Fall", house: "7th", sign: "Taurus", aspects: "Opposite Pluto", interpretation: "Intense relational dynamics. Transformative experiences in partnerships demand honesty and vulnerability." },
-    { name: "Mars", glyph: "♂", status: "Peregrine", house: "12th", sign: "Leo", aspects: "Trine Sun", interpretation: "Hidden drives and subconscious actions. Channel your fiery energy into spiritual or behind-the-scenes creative work." },
-  ];
-
   return (
-    <div className="col-span-12 lg:col-span-4 hairline-border rounded-3xl p-8 bg-parchment-1/50">
+    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
       <div className="mb-8">
-        <h2 className="font-serif text-3xl text-ink-text mb-1">Planetary Nodes</h2>
-        <span className="mono-tag">CURRENT POSITIONS & ASPECTS</span>
+        <h2 className="font-serif text-3xl text-ink-text mb-1">{PLANETS_PANEL.title}</h2>
+        <span className="mono-tag">{PLANETS_PANEL.subtitle}</span>
       </div>
 
       <div className="flex flex-col gap-4">
-        {planets.map((planet, i) => (
+        {PLANETS.map((planet) => (
           <div
-            key={i}
+            key={planet.name}
             className="flex flex-col p-4 hairline-border rounded-xl bg-parchment-2/30 cursor-pointer hover:bg-parchment-2/50 transition-colors"
             onClick={() => setExpandedPlanet(expandedPlanet === planet.name ? null : planet.name)}
           >
@@ -512,7 +552,7 @@ const PlanetsList = () => {
                 className="mt-4 pt-4 hairline-border-t overflow-hidden"
               >
                 <div className="mb-2">
-                  <span className="mono-tag text-royal-700">ASPECTS: </span>
+                  <span className="mono-tag text-royal-700">{PLANETS_PANEL.aspectsLabel}</span>
                   <span className="mono-tag text-royal-900">{planet.aspects}</span>
                 </div>
                 <p className="font-serif italic text-royal-900/80 leading-relaxed">
@@ -527,80 +567,62 @@ const PlanetsList = () => {
   );
 };
 
-const WuxingBalancePanel = () => {
-  const elements = [
-    { name: "Wood", value: 30, color: "bg-[#4A6B53]" },
-    { name: "Fire", value: 45, color: "bg-[#8B3A3A]" },
-    { name: "Earth", value: 15, color: "bg-[#826A4B]" },
-    { name: "Metal", value: 5, color: "bg-[#9CA3AF]" },
-    { name: "Water", value: 5, color: "bg-[#1B2C4A]" },
-  ];
-
-  return (
-    <div className="col-span-12 md:col-span-6 hairline-border rounded-3xl p-8 bg-parchment-1/50">
-      <div className="mb-8">
-        <h2 className="font-serif text-3xl text-ink-text mb-1">Wu Xing</h2>
-        <span className="mono-tag">FIVE ELEMENTS BALANCE</span>
-      </div>
-
-      <div className="space-y-6 mt-12">
-        {elements.map((el, i) => (
-          <div key={i} className="flex items-center gap-4">
-            <span className="mono-tag w-12 text-right">{el.name}</span>
-            <div className="flex-1 h-1 bg-parchment-2 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                whileInView={{ width: `${el.value}%` }}
-                transition={{ duration: 1, delay: i * 0.1 }}
-                className={`h-full ${el.color}`}
-              />
-            </div>
-            <span className="mono-tag w-8 text-gold-bronze">{el.value}%</span>
-          </div>
-        ))}
-      </div>
+// ─────────────────────────────────────────────────────────────────────────────
+// Wu Xing Balance Panel
+// ─────────────────────────────────────────────────────────────────────────────
+const WuxingBalancePanel = () => (
+  <div className="col-span-12 md:col-span-6 hairline-border rounded-3xl p-8 bg-parchment-1/50">
+    <div className="mb-8">
+      <h2 className="font-serif text-3xl text-ink-text mb-1">{WUXING_PANEL.title}</h2>
+      <span className="mono-tag">{WUXING_PANEL.subtitle}</span>
     </div>
-  );
-};
 
-const HousesOverview12 = () => {
-  const houses = [
-    { num: "I", name: "Self", sign: "♈" },
-    { num: "II", name: "Value", sign: "♉" },
-    { num: "III", name: "Mind", sign: "♊" },
-    { num: "IV", name: "Roots", sign: "♋" },
-    { num: "V", name: "Joy", sign: "♌" },
-    { num: "VI", name: "Duty", sign: "♍" },
-    { num: "VII", name: "Others", sign: "♎" },
-    { num: "VIII", name: "Depth", sign: "♏" },
-    { num: "IX", name: "Truth", sign: "♐" },
-    { num: "X", name: "Legacy", sign: "♑" },
-    { num: "XI", name: "Network", sign: "♒" },
-    { num: "XII", name: "Spirit", sign: "♓" },
-  ];
-
-  return (
-    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
-      <div className="flex justify-between items-end mb-8">
-        <div>
-          <h2 className="font-serif text-3xl text-ink-text mb-1">Astrological Houses</h2>
-          <span className="mono-tag">MUNDANE SPHERES</span>
+    <div className="space-y-6 mt-12">
+      {WUXING_ELEMENTS.map((el, i) => (
+        <div key={el.name} className="flex items-center gap-4">
+          <span className="mono-tag w-12 text-right">{el.name}</span>
+          <div className="flex-1 h-1 bg-parchment-2 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: `${el.value}%` }}
+              transition={{ duration: 1, delay: i * 0.1 }}
+              className={`h-full ${el.color}`}
+            />
+          </div>
+          <span className="mono-tag w-8 text-gold-bronze">{el.value}%</span>
         </div>
-      </div>
+      ))}
+    </div>
+  </div>
+);
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {houses.map((house, i) => (
-          <div key={i} className="hairline-border rounded-xl p-4 flex flex-col items-center justify-center bg-parchment-1/40">
-            <span className="font-serif text-2xl text-ink-text mb-2">{house.num}</span>
-            <span className="mono-tag text-gold-bronze mb-2">{house.name}</span>
-            <span className="text-xl text-royal-800/50">{house.sign}</span>
-          </div>
-        ))}
+// ─────────────────────────────────────────────────────────────────────────────
+// Houses Overview
+// ─────────────────────────────────────────────────────────────────────────────
+const HousesOverview12 = () => (
+  <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
+    <div className="flex justify-between items-end mb-8">
+      <div>
+        <h2 className="font-serif text-3xl text-ink-text mb-1">{HOUSES_PANEL.title}</h2>
+        <span className="mono-tag">{HOUSES_PANEL.subtitle}</span>
       </div>
     </div>
-  );
-};
 
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      {HOUSES.map((house) => (
+        <div key={house.num} className="hairline-border rounded-xl p-4 flex flex-col items-center justify-center bg-parchment-1/40">
+          <span className="font-serif text-2xl text-ink-text mb-2">{house.num}</span>
+          <span className="mono-tag text-gold-bronze mb-2">{house.name}</span>
+          <span className="text-xl text-royal-800/50">{house.sign}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Personalized Insights Form
+// ─────────────────────────────────────────────────────────────────────────────
 const PersonalizedInsights = () => {
   const [formData, setFormData] = React.useState({ date: '', time: '', location: '' });
   const [insight, setInsight] = React.useState<string | null>(null);
@@ -611,7 +633,7 @@ const PersonalizedInsights = () => {
     setIsGenerating(true);
     setError(null);
     try {
-      const { createChart, generateInsight, registerUser } = await import('./api.js');
+      const { createChart, generateInsight, registerUser } = await import('./api');
       await registerUser();
       const chart = await createChart({
         birth_date: formData.date,
@@ -630,40 +652,42 @@ const PersonalizedInsights = () => {
     }
   };
 
+  const f = INSIGHTS_FORM;
+
   return (
     <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
       <div className="mb-8">
-        <h2 className="font-serif text-3xl text-ink-text mb-1">Personalized Insights</h2>
-        <span className="mono-tag">NATAL CHART SYNTHESIS</span>
+        <h2 className="font-serif text-3xl text-ink-text mb-1">{f.title}</h2>
+        <span className="mono-tag">{f.subtitle}</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">BIRTH DATE</label>
+          <label className="mono-tag text-gold-bronze">{f.birthDateLabel}</label>
           <input
             type="date"
             className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
             value={formData.date}
-            onChange={e => setFormData({...formData, date: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">BIRTH TIME</label>
+          <label className="mono-tag text-gold-bronze">{f.birthTimeLabel}</label>
           <input
             type="time"
             className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
             value={formData.time}
-            onChange={e => setFormData({...formData, time: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">LOCATION</label>
+          <label className="mono-tag text-gold-bronze">{f.locationLabel}</label>
           <input
             type="text"
-            placeholder="e.g. Munich, DE"
+            placeholder={f.locationPlaceholder}
             className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
             value={formData.location}
-            onChange={e => setFormData({...formData, location: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
           />
         </div>
       </div>
@@ -674,7 +698,7 @@ const PersonalizedInsights = () => {
           disabled={isGenerating}
           className="px-8 py-3 rounded-full hairline-border bg-parchment-2/40 text-ink-text font-serif tracking-widest uppercase hover:bg-gold-bronze hover:text-parchment-0 transition-all duration-300 disabled:opacity-50"
         >
-          {isGenerating ? 'CALCULATING ALIGNMENTS...' : 'GENERATE SYNTHESIS'}
+          {isGenerating ? f.generatingButton : f.generateButton}
         </button>
       </div>
 
@@ -700,14 +724,23 @@ const PersonalizedInsights = () => {
   );
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// App Root
+// ─────────────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [astroProfile, setAstroProfile] = useState<any>(null);
+  const [astroProfile, setAstroProfile] = useState<Record<string, string> | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const { data, error } = await supabase
+        const client = getSupabase();
+        if (!client) {
+          // Supabase env vars not configured – use default zodiac data.
+          setLoading(false);
+          return;
+        }
+        const { data, error } = await client
           .from('astro_profile')
           .select('*')
           .single();
@@ -741,7 +774,7 @@ export default function App() {
             {loading ? (
               <div className="col-span-12 py-24 text-center">
                 <div className="inline-block w-8 h-8 border-2 border-gold-bronze border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="mono-tag text-gold-bronze">Synchronizing with Celestial Data...</p>
+                <p className="mono-tag text-gold-bronze">{MESSAGES.loadingCelestial}</p>
               </div>
             ) : (
               <ZodiacMatrix data={astroProfile} />
@@ -751,10 +784,17 @@ export default function App() {
           </div>
         </div>
 
+        {/* Deep Analysis CTA */}
         <div className="max-w-7xl mx-auto px-6 flex justify-center mt-8">
-          <button className="px-8 py-4 rounded-full hairline-border bg-parchment-2/40 text-ink-text font-serif tracking-widest uppercase hover:bg-gold-bronze hover:text-parchment-0 transition-all duration-300 flex items-center gap-3">
+          <button
+            className="px-8 py-4 rounded-full hairline-border bg-parchment-2/40 text-ink-text font-serif tracking-widest uppercase hover:bg-gold-bronze hover:text-parchment-0 transition-all duration-300 flex items-center gap-3"
+            onClick={() => {
+              // TODO: trigger deep Tiefenanalyse flow
+              console.info('Tiefenanalyse requested');
+            }}
+          >
             <Star className="w-4 h-4" />
-            Tiefenanalyse
+            {CTA.deepAnalysis}
           </button>
         </div>
       </main>
