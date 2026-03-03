@@ -52,10 +52,6 @@ body {
   border-top: 1px solid rgba(130, 106, 75, 0.3);
   border-bottom: 1px solid rgba(130, 106, 75, 0.3);
 }
-.hairline-border-x {
-  border-left: 1px solid rgba(130, 106, 75, 0.3);
-  border-right: 1px solid rgba(130, 106, 75, 0.3);
-}
 
 .noise-overlay {
   display: none;

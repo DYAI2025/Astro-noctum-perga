@@ -25,6 +25,45 @@ export async function registerUser(): Promise<void> {
   });
 }
 
+// ─── Geocoding via OpenStreetMap Nominatim (free, no API key needed) ────────
+
+export interface GeoResult {
+  lat: number;
+  lon: number;
+  displayName: string;
+}
+
+export async function geocodeLocation(query: string): Promise<GeoResult> {
+  const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+
+  const res = await fetch(url, {
+    headers: {
+      // Nominatim requires a descriptive User-Agent
+      'Accept-Language': 'en',
+      'User-Agent': 'AstroNoctum/1.0 (astrology observatory app)',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Geocoding failed: ${res.statusText}`);
+  }
+
+  const results = await res.json() as Array<{ lat: string; lon: string; display_name: string }>;
+
+  if (!results || results.length === 0) {
+    throw new Error(`Location not found: "${query}". Please try a more specific location name.`);
+  }
+
+  const [first] = results;
+  return {
+    lat: parseFloat(first.lat),
+    lon: parseFloat(first.lon),
+    displayName: first.display_name,
+  };
+}
+
+// ─── Chart & Insight API ─────────────────────────────────────────────────────
+
 export interface ChartInput {
   birth_date: string;
   birth_time: string;

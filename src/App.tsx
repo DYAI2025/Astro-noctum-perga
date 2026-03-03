@@ -1,125 +1,25 @@
 /**
  * ASTRO NOCTUM - PREMIUM OBSERVATORY DASHBOARD
  *
- * 1) Executive Summary
- * Das Redesign von "Astro Noctum" transformiert die Plattform in ein ruhiges, systemisches "Observatorium der Sterne".
- * Durch die Kombination von Royal Blue, Antique Gold und Pergament-Tönen entsteht eine "Quiet Luxury"-Ästhetik.
- * Der Fokus liegt auf klaren, hauchdünnen Ephemeriden-Linien (Hairlines), großzügigem Whitespace und einer
- * strengen typografischen Hierarchie, die mystische Tiefe mit technologischer Präzision vereint.
- *
- * 2) Informationsarchitektur (IA)
- * - System Header (Status, Koordinaten)
- * - Hero: Solar System Module (Orbital Overview)
- * - Insight Card Quote Panel (Zusammenfassung)
- * - KPI Strip (Resonanz, Fokus, Energie)
- * - Main Grid (12-Column):
- *   - Zodiac Grid (12 Sectors) [Col 8]
- *   - Planets List (Nodes) [Col 4]
- *   - Houses Overview (12 Spheres) [Col 12]
- *   - BaZi Pillars (4 Pillars) [Col 6]
- *   - Wu Xing Balance (5 Elements) [Col 6]
- * - Primary CTA (Tiefenanalyse)
- *
- * 3) Layout Blueprint
- * [ HEADER: Logo | Status | Coordinates ]
- * [-------------------------------------]
- * [ HERO: Concentric Rings + Planets    ]
- * [       Center Seal (Sun)             ]
- * [-------------------------------------]
- * [ INSIGHT: "Quote..."                 ]
- * [-------------------------------------]
- * [ KPI 1 | KPI 2 | KPI 3               ]
- * [-------------------------------------]
- * [ ZODIAC MATRIX (12)                  ]
- * [ PLANETS LIST (12)                   ]
- * [ PERSONALIZED INSIGHTS (12)          ]
- * [-------------------------------------]
- * [ CTA: Tiefenanalyse                  ]
- *
- * 4) Design System (Tokens)
- * - Parchment: #F4E9D6, #F1E3CC, #D9C7A8
- * - Royal Blue: #010103, #0E1B33, #162239, #1B2C4A
- * - Antique Gold: #826A4B, #A6895D, #CEB584, #EFD28A
- * - Status: #CFE3EA (Pale Blue)
- * - Typography: Inter (Sans), Cormorant Garamond (Serif), JetBrains Mono (Mono)
- *
- * 5) Component Inventory
- * - SystemHeaderStatusBar: Sticky top, backdrop blur, mono tags
- * - HeroSolarSystemModule: Relative container, absolute rings/ticks, animated nodes
- * - InsightCardQuotePanel: Serif italic text, gold accents
- * - KPIStrip: 3-column grid, icons, large serif values
- * - ZodiacGrid12: CSS Grid, hover states, glyphs
- * - PlanetsList: Flex column, status colors
- * - HousesOverview12: 6-column grid, roman numerals
- * - BaziPillarsPanel: 4-column flex, vertical layout
- * - WuxingBalancePanel: Progress bars, percentage values
- *
- * 6) All visible copy is sourced from src/content.ts – edit that file to
- *    adapt any text, label, or data value without touching component logic.
- *
- * 7) Implementation Notes
- * - Stack: React + Tailwind CSS + Motion
- * - Styling: Custom CSS variables in index.css, hairline utility classes
- * - Effects: SVG Noise filter overlay for texture, radial gradients for depth
- *
- * 8) QA Checklist
- * [x] 0% Violet/Pink/Rosa
- * [x] Gold nur als Linie/Typo-Detail (keine Flächen)
- * [x] Kein Neon/Cyberpunk (nur softe Glows)
- * [x] Hairline Diagramm-Lines (~1px, low opacity)
- * [x] Ornamentik nur als Rahmen/Siegel
- * [x] Solar-System-Hero dominant
- * [x] Insight-Text geschwungen & lesbar (Cormorant Garamond)
- * [x] Desktop 12-Grid + Mobile Single Column
+ * Stack: React 19 + Tailwind CSS v4 + Motion
+ * Data:  BAFE /calculate/chart → real planetary positions, BaZi, Wu Xing, houses
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Compass, Star } from 'lucide-react';
-import { getSupabase } from './supabase';
-import {
-  BRAND,
-  HERO_COORDINATES,
-  INSIGHT_QUOTE,
-  KPI_ITEMS,
-  DEFAULT_ZODIAC,
-  ZODIAC_GLYPHS,
-  BAZI_GLYPHS,
-  ZODIAC_TILE_LABELS,
-  PLANETS,
-  PLANETS_PANEL,
-  HOUSES,
-  HOUSES_PANEL,
-  WUXING_ELEMENTS,
-  WUXING_PANEL,
-  INSIGHTS_FORM,
-  CTA,
-  MESSAGES,
-} from './content';
+import { Compass, Activity, Eye, Zap } from 'lucide-react';
+import type { BAFEChartResponse } from './types';
+import { getUserId } from './api';
+import SolarSystem3D from './components/SolarSystem3D';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Interactive Starfield
-// ─────────────────────────────────────────────────────────────────────────────
-const InteractiveStarfield = () => {
-  const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
-  const [activeStar, setActiveStar] = React.useState<string | null>(null);
+const agentIds = ((import.meta as any).env?.VITE_ELEVENLABS_AGENT_IDS ?? (import.meta as any).env?.VITE_ELEVENLABS_AGENT_ID ?? "agent_xyz")
+  .split(",")
+  .map((s: string) => s.trim())
+  .filter(Boolean);
 
-  React.useEffect(() => {
-    let animationFrameId: number;
-    const handleMouseMove = (e: MouseEvent) => {
-      animationFrameId = requestAnimationFrame(() => {
-        setMousePos({
-          x: (e.clientX / window.innerWidth - 0.5) * 20,
-          y: (e.clientY / window.innerHeight - 0.5) * 20,
-        });
-      });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
+const agentLabels = ((import.meta as any).env?.VITE_ELEVENLABS_AGENT_LABELS ?? "Astro Expert")
+  .split(",")
+  .map((s: string) => s.trim());
 
   const layers = React.useMemo(() => {
     const generateStars = (count: number, depth: number) =>
@@ -330,44 +230,27 @@ const HeroSolarSystemModule = () => (
     <div className="absolute left-8 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/50 -rotate-90">{HERO_COORDINATES.left}</div>
     <div className="absolute right-8 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/50 rotate-90">{HERO_COORDINATES.right}</div>
 
-    {/* Center Seal */}
-    <div className="relative z-10 w-32 h-32 rounded-full hairline-border flex items-center justify-center bg-parchment-0/80 backdrop-blur-sm shadow-[0_0_40px_rgba(130,106,75,0.1)]">
-      <DetailedSun />
+    {/* Zodiac cardinal labels — pointer-events-none so drag passes to canvas */}
+    <div className="absolute inset-0 pointer-events-none z-10">
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 mono-tag text-gold-bronze/40">0° ARIES</div>
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 mono-tag text-gold-bronze/40">180° LIBRA</div>
+      <div className="absolute left-6 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/40 -rotate-90">90° CANCER</div>
+      <div className="absolute right-6 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/40 rotate-90">270° CAPRICORN</div>
     </div>
 
-    {/* Decorative Planets */}
-    <div className="absolute z-10 w-full h-full flex items-center justify-center pointer-events-none">
-      <div className="absolute w-[40%] h-[40%] animate-[spin_60s_linear_infinite]">
-        <div className="absolute -top-2 left-1/2 w-4 h-4 rounded-full bg-royal-700 shadow-[0_0_10px_rgba(27,44,74,0.3)]" />
-      </div>
-      <div className="absolute w-[60%] h-[60%] animate-[spin_90s_linear_infinite_reverse]">
-        <div className="absolute top-1/2 -right-2 w-5 h-5 rounded-full bg-gold-bronze shadow-[0_0_15px_rgba(130,106,75,0.2)]" />
-      </div>
-      <div className="absolute w-[80%] h-[80%] animate-[spin_120s_linear_infinite]">
-        <div className="absolute -bottom-3 left-1/3 w-6 h-6 rounded-full bg-royal-800 shadow-[0_0_20px_rgba(22,34,57,0.2)]" />
-      </div>
-    </div>
-
-    <div className="absolute bottom-8 left-8">
-      <h1 className="font-serif text-5xl md:text-7xl font-light tracking-tight text-ink-text mb-2">
-        {BRAND.heroTitle}
-      </h1>
-      <p className="mono-tag text-gold-bronze">{BRAND.epochTag}</p>
+    {/* Title — bottom-left, pointer-events-none */}
+    <div className="absolute bottom-8 left-8 z-20 pointer-events-none">
+      <h1 className="font-serif text-5xl md:text-7xl font-light tracking-tight text-ink-text mb-2">Astro Noctum</h1>
+      <p className="mono-tag text-gold-bronze">ORBITAL OVERVIEW // EPOCH 2026</p>
     </div>
   </section>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Insight Quote Panel
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Insight Quote ───────────────────────────────────────────────────────────
+
 const InsightCardQuotePanel = () => (
   <section className="w-full max-w-4xl mx-auto py-24 px-6 text-center">
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 1, delay: 0.2 }}
-      className="relative"
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.2 }} className="relative">
       <span className="absolute -top-12 left-1/2 -translate-x-1/2 text-6xl text-gold-bronze/20 font-serif">"</span>
       <p className="script-font text-3xl md:text-4xl leading-relaxed text-royal-900 max-w-3xl mx-auto">
         {INSIGHT_QUOTE.main}
@@ -383,45 +266,43 @@ const InsightCardQuotePanel = () => (
   </section>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// KPI Strip
-// ─────────────────────────────────────────────────────────────────────────────
-const KPIStrip = () => (
-  <section className="w-full hairline-border-t hairline-border-b bg-parchment-1/30">
-    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gold-bronze/20">
-      {KPI_ITEMS.map((kpi, i) => (
-        <div key={i} className="p-8 flex flex-col items-center justify-center text-center">
-          <kpi.icon className="w-5 h-5 text-gold-bronze mb-4 opacity-70" />
-          <span className="mono-tag mb-2">{kpi.label}</span>
-          <span className="font-serif text-3xl text-ink-text">{kpi.value}</span>
-        </div>
-      ))}
-    </div>
-  </section>
-);
+// ─── KPI Strip ───────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Zodiac tile helpers
-// ─────────────────────────────────────────────────────────────────────────────
-const getZodiacGlyph = (sign: string) => ZODIAC_GLYPHS[sign] ?? '✨';
-const getBaziGlyph   = (animal: string) => BAZI_GLYPHS[animal] ?? '🏮';
+const KPIStrip = ({ chartData }: { chartData?: BAFEChartResponse | null }) => {
+  const harmony = chartData?.wuxing.harmony_index;
+  const sunSign = chartData?.positions.find(p => p.name === 'Sun')?.sign_name ?? 'Aries';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Zodiac tile components
-// ─────────────────────────────────────────────────────────────────────────────
-const MajorTile = ({
-  title,
-  value,
-  glyph,
-  subtitle,
-  char,
-}: {
-  title: string;
-  value: string;
-  glyph: string;
-  subtitle: string;
-  char?: string;
-}) => (
+  const kpis = [
+    { label: 'SONNENZEICHEN', value: getZodiacGlyph(sunSign), sub: sunSign.toUpperCase(), icon: null },
+    { label: 'RESONANZ', value: harmony != null ? `${Math.round(harmony * 100)}%` : '87%', icon: Activity },
+    { label: 'FOKUS',    value: chartData?.wuxing.dominant_planet.toUpperCase() ?? 'ZENITH',   icon: Eye },
+    { label: 'ENERGIE',  value: chartData?.wuxing.dominant_bazi.toUpperCase()   ?? 'STEIGEND', icon: Zap },
+  ];
+
+  return (
+    <section className="w-full hairline-border-y bg-parchment-1/30">
+      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 divide-y-0 divide-x divide-gold-bronze/20">
+        {kpis.map((kpi, i) => (
+          <div key={i} className={`p-8 flex flex-col items-center justify-center text-center ${i < kpis.length - 1 ? 'hairline-border-r' : ''}`}>
+            {kpi.icon
+              ? <kpi.icon className="w-5 h-5 text-gold-bronze mb-4 opacity-70" />
+              : <span className="text-2xl text-gold-bronze mb-4 leading-none">{kpi.value}</span>
+            }
+            <span className="mono-tag mb-2">{kpi.label}</span>
+            {kpi.icon
+              ? <span className="font-serif text-3xl text-ink-text">{kpi.value}</span>
+              : <span className="font-serif text-xl text-ink-text tracking-wide">{kpi.sub}</span>
+            }
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+// ─── Tile Components ─────────────────────────────────────────────────────────
+
+const MajorTile = ({ title, value, glyph, subtitle, char }: { title: string; value: string; glyph: string; subtitle: string; char?: string }) => (
   <div className="hairline-border rounded-3xl p-8 bg-parchment-1/50 relative overflow-hidden group hover:bg-parchment-2/40 transition-all duration-500">
     <div className="absolute top-0 right-0 w-32 h-32 bg-gold-bronze/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-gold-bronze/10 transition-all" />
     <div className="flex justify-between items-start mb-6">
@@ -441,17 +322,7 @@ const MajorTile = ({
   </div>
 );
 
-const SecondaryTile = ({
-  title,
-  value,
-  glyph,
-  subtitle,
-}: {
-  title: string;
-  value: string;
-  glyph: string;
-  subtitle?: string;
-}) => (
+const SecondaryTile = ({ title, value, glyph, subtitle }: { title: string; value: string; glyph: string; subtitle?: string }) => (
   <div className="hairline-border rounded-2xl p-6 bg-parchment-1/40 hover:bg-parchment-2/30 transition-all group">
     <div className="flex flex-col items-center text-center">
       <span className="mono-tag text-[0.6rem] text-gold-bronze mb-3">{title}</span>
@@ -464,55 +335,88 @@ const SecondaryTile = ({
   </div>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Zodiac Matrix (main data grid)
-// ─────────────────────────────────────────────────────────────────────────────
-const ZodiacMatrix = ({ data }: { data: Record<string, string> | null }) => {
-  const z = data ?? DEFAULT_ZODIAC;
-  const tl = ZODIAC_TILE_LABELS;
+// ─── Zodiac Matrix ───────────────────────────────────────────────────────────
+
+const DEFAULT_ZODIAC = {
+  sun_sign: 'Aries', moon_sign: 'Cancer', ascendant: 'Gemini',
+  bazi_year: 'Dragon',  bazi_year_char:  '甲辰',
+  bazi_month: 'Snake',  bazi_month_char: '巳',
+  day_master: 'Earth',  day_master_char:  '戊',
+  hour_master: 'Metal', hour_master_char: '庚',
+};
+
+const ZodiacMatrix = ({ chartData }: { chartData?: BAFEChartResponse | null }) => {
+  let z = DEFAULT_ZODIAC;
+
+  if (chartData) {
+    const { positions, bazi, angles } = chartData;
+    const sun  = positions.find(p => p.name === 'Sun');
+    const moon = positions.find(p => p.name === 'Moon');
+    const { year, month, day, hour } = bazi.pillars;
+    z = {
+      sun_sign:        sun?.sign_name  ?? 'Aries',
+      moon_sign:       moon?.sign_name ?? 'Cancer',
+      ascendant:       degToSignName(angles['Ascendant'] ?? 0),
+      bazi_year:       year.animal,
+      bazi_year_char:  (STEM_CHARS[year.stem]   ?? '') + (BRANCH_CHARS[year.branch]   ?? ''),
+      bazi_month:      month.animal,
+      bazi_month_char: (STEM_CHARS[month.stem]  ?? '') + (BRANCH_CHARS[month.branch]  ?? ''),
+      day_master:      day.stem,
+      day_master_char: STEM_CHARS[day.stem]  ?? '戊',
+      hour_master:     hour.stem,
+      hour_master_char: STEM_CHARS[hour.stem] ?? '庚',
+    };
+  }
 
   return (
     <div className="col-span-12 space-y-8">
-      {/* Row 1: Major Tiles */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <MajorTile
-          title={tl.sunSign.title}
-          value={z.sun_sign}
-          glyph={getZodiacGlyph(z.sun_sign)}
-          subtitle={tl.sunSign.subtitle}
-        />
-        <MajorTile
-          title={tl.yearAnimal.title}
-          value={z.bazi_year}
-          glyph={getBaziGlyph(z.bazi_year)}
-          char={z.bazi_year_char}
-          subtitle={tl.yearAnimal.subtitle}
-        />
+        <MajorTile title="SUN SIGN"    value={z.sun_sign}   glyph={getZodiacGlyph(z.sun_sign)}   subtitle="Western Astrology" />
+        <MajorTile title="YEAR ANIMAL" value={z.bazi_year}  glyph={getBaziGlyph(z.bazi_year)}   char={z.bazi_year_char} subtitle="BaZi / Chinese" />
       </div>
-
-      {/* Row 2: Secondary Tiles */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <SecondaryTile title={tl.ascendant.title}   value={z.ascendant}   glyph={getZodiacGlyph(z.ascendant)} />
-        <SecondaryTile title={tl.moonSign.title}    value={z.moon_sign}   glyph={getZodiacGlyph(z.moon_sign)} />
-        <SecondaryTile title={tl.monthAnimal.title} value={z.bazi_month}  glyph={getBaziGlyph(z.bazi_month)} />
-        <SecondaryTile title={tl.dayMaster.title}   value={z.day_master}  glyph={z.day_master_char || '戊'} />
-        <SecondaryTile title={tl.hourMaster.title}  value={z.hour_master} glyph={z.hour_master_char || '庚'} />
+        <SecondaryTile title="ASCENDANT"    value={z.ascendant}   glyph={getZodiacGlyph(z.ascendant)} />
+        <SecondaryTile title="MOON SIGN"    value={z.moon_sign}   glyph={getZodiacGlyph(z.moon_sign)} />
+        <SecondaryTile title="MONTH ANIMAL" value={z.bazi_month}  glyph={getBaziGlyph(z.bazi_month)} />
+        <SecondaryTile title="DAY MASTER"   value={z.day_master}  glyph={z.day_master_char} />
+        <SecondaryTile title="HOUR MASTER"  value={z.hour_master} glyph={z.hour_master_char} />
       </div>
-
-      {/* Row 3: Detail Panels */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <HousesOverview12 />
-        <WuxingBalancePanel />
+        <HousesOverview12 chartData={chartData} />
+        <WuxingBalancePanel chartData={chartData} />
       </div>
     </div>
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Planets List
-// ─────────────────────────────────────────────────────────────────────────────
-const PlanetsList = () => {
-  const [expandedPlanet, setExpandedPlanet] = React.useState<string | null>(null);
+// ─── Planets List ────────────────────────────────────────────────────────────
+
+const DEMO_PLANETS = [
+  { name: 'Sun',     glyph: '☉', status: 'Exalted',   house: '10th', sign: 'Aries',  aspects: 'Trine Mars, Sextile Jupiter', interpretation: 'A period of strong vitality and clear purpose. Your core identity aligns seamlessly with your public roles and ambitions.' },
+  { name: 'Moon',    glyph: '☽', status: 'Detriment', house: '4th',  sign: 'Cancer', aspects: 'Square Venus',                 interpretation: 'Emotional depths are stirred. Seek comfort in your roots, but be mindful of overindulgence in seeking harmony.' },
+  { name: 'Mercury', glyph: '☿', status: 'Domicile',  house: '1st',  sign: 'Gemini', aspects: 'Conjunct Ascendant',           interpretation: 'Your mind is sharp and communicative. A perfect time for intellectual pursuits and expressing your ideas clearly.' },
+  { name: 'Venus',   glyph: '♀', status: 'Fall',      house: '7th',  sign: 'Taurus', aspects: 'Opposite Pluto',               interpretation: 'Intense relational dynamics. Transformative experiences in partnerships demand honesty and vulnerability.' },
+  { name: 'Mars',    glyph: '♂', status: 'Peregrine', house: '12th', sign: 'Leo',    aspects: 'Trine Sun',                    interpretation: 'Hidden drives and subconscious actions. Channel your fiery energy into spiritual or behind-the-scenes creative work.' },
+];
+
+const PlanetsList = ({ chartData }: { chartData?: BAFEChartResponse | null }) => {
+  const [expanded, setExpanded] = React.useState<string | null>(null);
+
+  const planets = chartData
+    ? chartData.positions
+        .filter(p => MAIN_PLANETS.includes(p.name))
+        .map(p => ({
+          name: p.name,
+          glyph: PLANET_GLYPHS[p.name] ?? '✦',
+          status: p.is_retrograde ? 'Retrograde' : 'Direct',
+          house: getPlanetHouse(p.longitude_deg, chartData.houses),
+          sign: p.sign_name,
+          aspects: `${p.degree_in_sign?.toFixed(2) ?? '?'}° ${p.sign_name}`,
+          interpretation: p.is_retrograde
+            ? `${p.name} bewegt sich retrograd bei ${p.degree_in_sign?.toFixed(1) ?? '?'}° ${p.sign_name} — eine Zeit der Vertiefung und inneren Schau.`
+            : `${p.name} steht direkt bei ${p.degree_in_sign?.toFixed(1) ?? '?'}° ${p.sign_name} und entfaltet seine volle Strahlkraft.`,
+        }))
+    : DEMO_PLANETS;
 
   return (
     <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
@@ -520,44 +424,29 @@ const PlanetsList = () => {
         <h2 className="font-serif text-3xl text-ink-text mb-1">{PLANETS_PANEL.title}</h2>
         <span className="mono-tag">{PLANETS_PANEL.subtitle}</span>
       </div>
-
       <div className="flex flex-col gap-4">
-        {PLANETS.map((planet) => (
-          <div
-            key={planet.name}
-            className="flex flex-col p-4 hairline-border rounded-xl bg-parchment-2/30 cursor-pointer hover:bg-parchment-2/50 transition-colors"
-            onClick={() => setExpandedPlanet(expandedPlanet === planet.name ? null : planet.name)}
-          >
+        {planets.map((planet, i) => (
+          <div key={i} className="flex flex-col p-4 hairline-border rounded-xl bg-parchment-2/30 cursor-pointer hover:bg-parchment-2/50 transition-colors"
+            onClick={() => setExpanded(expanded === planet.name ? null : planet.name)}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full hairline-border flex items-center justify-center text-gold-bronze text-lg shrink-0">
-                  {planet.glyph}
-                </div>
+                <div className="w-10 h-10 rounded-full hairline-border flex items-center justify-center text-gold-bronze text-lg shrink-0">{planet.glyph}</div>
                 <div>
                   <div className="text-ink-text font-medium tracking-wide">{planet.name}</div>
                   <div className="mono-tag mt-1">{planet.sign} // {planet.house} House</div>
                 </div>
               </div>
-              <div className="text-right">
-                <span className={`mono-tag ${planet.status === 'Exalted' || planet.status === 'Domicile' ? 'text-royal-700' : 'text-royal-800'}`}>
-                  {planet.status}
-                </span>
-              </div>
+              <span className={`mono-tag ${planet.status === 'Exalted' || planet.status === 'Domicile' || planet.status === 'Direct' ? 'text-royal-700' : 'text-royal-800'}`}>
+                {planet.status}
+              </span>
             </div>
-
-            {expandedPlanet === planet.name && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="mt-4 pt-4 hairline-border-t overflow-hidden"
-              >
+            {expanded === planet.name && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-4 pt-4 hairline-border-t overflow-hidden">
                 <div className="mb-2">
-                  <span className="mono-tag text-royal-700">{PLANETS_PANEL.aspectsLabel}</span>
+                  <span className="mono-tag text-royal-700">POSITION: </span>
                   <span className="mono-tag text-royal-900">{planet.aspects}</span>
                 </div>
-                <p className="font-serif italic text-royal-900/80 leading-relaxed">
-                  "{planet.interpretation}"
-                </p>
+                <p className="font-serif italic text-royal-900/80 leading-relaxed">"{planet.interpretation}"</p>
               </motion.div>
             )}
           </div>
@@ -567,34 +456,58 @@ const PlanetsList = () => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Wu Xing Balance Panel
-// ─────────────────────────────────────────────────────────────────────────────
-const WuxingBalancePanel = () => (
-  <div className="col-span-12 md:col-span-6 hairline-border rounded-3xl p-8 bg-parchment-1/50">
-    <div className="mb-8">
-      <h2 className="font-serif text-3xl text-ink-text mb-1">{WUXING_PANEL.title}</h2>
-      <span className="mono-tag">{WUXING_PANEL.subtitle}</span>
-    </div>
+// ─── Wu Xing Balance ─────────────────────────────────────────────────────────
 
-    <div className="space-y-6 mt-12">
-      {WUXING_ELEMENTS.map((el, i) => (
-        <div key={el.name} className="flex items-center gap-4">
-          <span className="mono-tag w-12 text-right">{el.name}</span>
-          <div className="flex-1 h-1 bg-parchment-2 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              whileInView={{ width: `${el.value}%` }}
-              transition={{ duration: 1, delay: i * 0.1 }}
-              className={`h-full ${el.color}`}
-            />
+const DEMO_ELEMENTS = [
+  { name: 'Wood',  value: 30, color: 'bg-[#4A6B53]' },
+  { name: 'Fire',  value: 45, color: 'bg-[#8B3A3A]' },
+  { name: 'Earth', value: 15, color: 'bg-[#826A4B]' },
+  { name: 'Metal', value: 5,  color: 'bg-[#9CA3AF]' },
+  { name: 'Water', value: 5,  color: 'bg-[#1B2C4A]' },
+];
+
+const WuxingBalancePanel = ({ chartData }: { chartData?: BAFEChartResponse | null }) => {
+  const elements = chartData ? normalizeWuxingToUI(chartData.wuxing.from_bazi) : DEMO_ELEMENTS;
+
+  return (
+    <div className="col-span-12 md:col-span-6 hairline-border rounded-3xl p-8 bg-parchment-1/50">
+      <div className="mb-8">
+        <h2 className="font-serif text-3xl text-ink-text mb-1">Wu Xing</h2>
+        <span className="mono-tag">FIVE ELEMENTS BALANCE</span>
+      </div>
+      <div className="space-y-6 mt-12">
+        {elements.map((el, i) => (
+          <div key={i} className="flex items-center gap-4">
+            <span className="mono-tag w-12 text-right">{el.name}</span>
+            <div className="flex-1 h-1 bg-parchment-2 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                whileInView={{ width: `${el.value}%` }}
+                viewport={{ once: true }}
+                transition={{ duration: 1, delay: i * 0.1 }}
+                className={`h-full ${el.color}`}
+              />
+            </div>
+            <span className="mono-tag w-8 text-gold-bronze">{el.value}%</span>
           </div>
           <span className="mono-tag w-8 text-gold-bronze">{el.value}%</span>
         </div>
       ))}
     </div>
-  </div>
-);
+  );
+};
+
+// ─── Houses Overview ─────────────────────────────────────────────────────────
+
+const HOUSE_NAMES = ['Self','Value','Mind','Roots','Joy','Duty','Others','Depth','Truth','Legacy','Network','Spirit'];
+const HOUSE_ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+const DEMO_HOUSE_GLYPHS = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
+
+const HousesOverview12 = ({ chartData }: { chartData?: BAFEChartResponse | null }) => {
+  const houses = HOUSE_ROMAN.map((num, i) => {
+    const sign = chartData ? degToSignName(chartData.houses[String(i + 1)] ?? 0) : null;
+    return { num, name: HOUSE_NAMES[i], glyph: sign ? getZodiacGlyph(sign) : DEMO_HOUSE_GLYPHS[i] };
+  });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Houses Overview
@@ -606,45 +519,101 @@ const HousesOverview12 = () => (
         <h2 className="font-serif text-3xl text-ink-text mb-1">{HOUSES_PANEL.title}</h2>
         <span className="mono-tag">{HOUSES_PANEL.subtitle}</span>
       </div>
-    </div>
-
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-      {HOUSES.map((house) => (
-        <div key={house.num} className="hairline-border rounded-xl p-4 flex flex-col items-center justify-center bg-parchment-1/40">
-          <span className="font-serif text-2xl text-ink-text mb-2">{house.num}</span>
-          <span className="mono-tag text-gold-bronze mb-2">{house.name}</span>
-          <span className="text-xl text-royal-800/50">{house.sign}</span>
-        </div>
-      ))}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {houses.map((house, i) => (
+          <div key={i} className="hairline-border rounded-xl p-4 flex flex-col items-center justify-center bg-parchment-1/40">
+            <span className="font-serif text-2xl text-ink-text mb-2">{house.num}</span>
+            <span className="mono-tag text-gold-bronze mb-2">{house.name}</span>
+            <span className="text-xl text-royal-800/50">{house.glyph}</span>
+          </div>
+        ))}
+      </div>
     </div>
   </div>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Personalized Insights Form
-// ─────────────────────────────────────────────────────────────────────────────
-const PersonalizedInsights = () => {
-  const [formData, setFormData] = React.useState({ date: '', time: '', location: '' });
+// ─── Personalized Insights Form ───────────────────────────────────────────────
+
+const PersonalizedInsights = ({
+  onChartGenerated,
+}: {
+  onChartGenerated: (data: BAFEChartResponse) => void;
+}) => {
+  const [formData, setFormData] = React.useState({
+    date: '',
+    time: '',
+    location: '',
+    tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  });
   const [insight, setInsight] = React.useState<string | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  const set = (key: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setFormData(prev => ({ ...prev, [key]: e.target.value }));
+
   const handleGenerate = async () => {
+    // ── Validation ─────────────────────────────────────────────────────────
+    if (!formData.date || !formData.time || !formData.location) {
+      setError('Please fill in all required fields: birth date, time, and location.');
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
+
     try {
-      const { createChart, generateInsight, registerUser } = await import('./api');
+      const { createChart, generateInsight, registerUser, geocodeLocation } = await import('./api');
       await registerUser();
+
+      // ── Geocode location string → real lat/lon ──────────────────────────
+      const { lat, lon } = await geocodeLocation(formData.location);
+
       const chart = await createChart({
-        birth_date: formData.date,
-        birth_time: formData.time,
+        birth_date:    formData.date,
+        birth_time:    formData.time,
         location_name: formData.location,
-        tz_id: 'Europe/Berlin',
-        geo_lon_deg: 11.5754,
-        geo_lat_deg: 48.1371,
+        tz_id:         formData.tz,
+        geo_lon_deg:   lon,
+        geo_lat_deg:   lat,
       });
+
+      // ── Propagate real chart data to all dashboard panels ───────────────
+      if (chart.chart_data) {
+        onChartGenerated(chart.chart_data as unknown as BAFEChartResponse);
+      }
+
       const result = await generateInsight(chart.id);
       setInsight(result.content);
+
+      try {
+        const { upsertAstroProfile } = await import('./supabase');
+        if (chart.chart_data) {
+          const bazi = (chart.chart_data as any).bazi.pillars;
+          const sun = (chart.chart_data as any).positions.find((p: any) => p.name === 'Sun');
+          const moon = (chart.chart_data as any).positions.find((p: any) => p.name === 'Moon');
+          const ascendantDeg = (chart.chart_data as any).angles?.Ascendant || 0;
+          
+          await upsertAstroProfile({
+            user_id: getUserId(),
+            sun_sign: sun?.sign_name,
+            moon_sign: moon?.sign_name,
+            ascendant: degToSignName(ascendantDeg),
+            bazi_year: bazi?.year?.animal,
+            bazi_year_char: (STEM_CHARS[bazi?.year?.stem] || '') + (BRANCH_CHARS[bazi?.year?.branch] || ''),
+            bazi_month: bazi?.month?.animal,
+            bazi_month_char: (STEM_CHARS[bazi?.month?.stem] || '') + (BRANCH_CHARS[bazi?.month?.branch] || ''),
+            day_master: bazi?.day?.stem,
+            day_master_char: STEM_CHARS[bazi?.day?.stem] || '',
+            hour_master: bazi?.hour?.stem,
+            hour_master_char: STEM_CHARS[bazi?.hour?.stem] || '',
+            astro_json: { bafe: chart.chart_data, interpretation: result.content },
+            astro_computed_at: new Date().toISOString(),
+          });
+        }
+      } catch (e) {
+        console.error('Profile upsert failed', e);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate insight');
     } finally {
@@ -655,40 +624,36 @@ const PersonalizedInsights = () => {
   const f = INSIGHTS_FORM;
 
   return (
-    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
+    <div id="insights-section" className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
       <div className="mb-8">
         <h2 className="font-serif text-3xl text-ink-text mb-1">{f.title}</h2>
         <span className="mono-tag">{f.subtitle}</span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Birth Date */}
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">{f.birthDateLabel}</label>
-          <input
-            type="date"
-            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-          />
+          <label htmlFor="input-date" className="mono-tag text-gold-bronze">BIRTH DATE <span className="text-red-700 font-sans">*</span></label>
+          <input id="input-date" title="Birth Date" type="date" value={formData.date} onChange={set('date')}
+            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm" />
         </div>
+        {/* Birth Time */}
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">{f.birthTimeLabel}</label>
-          <input
-            type="time"
-            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
-            value={formData.time}
-            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-          />
+          <label htmlFor="input-time" className="mono-tag text-gold-bronze">BIRTH TIME <span className="text-red-700 font-sans">*</span></label>
+          <input id="input-time" title="Birth Time" type="time" value={formData.time} onChange={set('time')}
+            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm" />
         </div>
+        {/* Location */}
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">{f.locationLabel}</label>
-          <input
-            type="text"
-            placeholder={f.locationPlaceholder}
-            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm"
-            value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-          />
+          <label htmlFor="input-location" className="mono-tag text-gold-bronze">BIRTH LOCATION <span className="text-red-700 font-sans">*</span></label>
+          <input id="input-location" title="Birth Location" type="text" placeholder="e.g. Munich, DE" value={formData.location} onChange={set('location')}
+            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm" />
+        </div>
+        {/* Timezone */}
+        <div className="flex flex-col gap-2">
+          <label htmlFor="tz-input" className="mono-tag text-gold-bronze">TIMEZONE</label>
+          <input id="tz-input" title="Timezone" placeholder="e.g. Europe/Berlin" type="text" value={formData.tz} onChange={set('tz')}
+            className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm" />
         </div>
       </div>
 
@@ -709,52 +674,32 @@ const PersonalizedInsights = () => {
       )}
 
       {insight && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="hairline-border rounded-2xl p-8 bg-parchment-1/50 text-center relative overflow-hidden"
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          className="hairline-border rounded-2xl p-8 bg-parchment-1/50 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold-bronze/30 to-transparent" />
-          <p className="font-serif italic text-2xl leading-relaxed text-royal-900 max-w-3xl mx-auto">
-            "{insight}"
-          </p>
+          <p className="font-serif italic text-2xl leading-relaxed text-royal-900 max-w-3xl mx-auto">"{insight}"</p>
         </motion.div>
       )}
     </div>
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// App Root
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── App Root ────────────────────────────────────────────────────────────────
+
 export default function App() {
-  const [astroProfile, setAstroProfile] = useState<Record<string, string> | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState<BAFEChartResponse | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState(agentIds[0] || '');
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const client = getSupabase();
-        if (!client) {
-          // Supabase env vars not configured – use default zodiac data.
-          setLoading(false);
-          return;
-        }
-        const { data, error } = await client
-          .from('astro_profile')
-          .select('*')
-          .single();
-
-        if (error) throw error;
-        setAstroProfile(data);
-      } catch (err) {
-        console.error('Error fetching astro profile:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
+  React.useEffect(() => {
+    // Inject ElevenLabs web component script once
+    const scriptId = 'elevenlabs-convai-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://elevenlabs.io/convai-widget/index.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
   }, []);
 
   return (
@@ -767,37 +712,37 @@ export default function App() {
       <main className="pb-24">
         <HeroSolarSystemModule />
         <InsightCardQuotePanel />
-        <KPIStrip />
+        <KPIStrip chartData={chartData} />
 
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid grid-cols-12 gap-6">
-            {loading ? (
-              <div className="col-span-12 py-24 text-center">
-                <div className="inline-block w-8 h-8 border-2 border-gold-bronze border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="mono-tag text-gold-bronze">{MESSAGES.loadingCelestial}</p>
-              </div>
-            ) : (
-              <ZodiacMatrix data={astroProfile} />
-            )}
-            <PlanetsList />
-            <PersonalizedInsights />
+            <ZodiacMatrix chartData={chartData} />
           </div>
-        </div>
-
-        {/* Deep Analysis CTA */}
-        <div className="max-w-7xl mx-auto px-6 flex justify-center mt-8">
-          <button
-            className="px-8 py-4 rounded-full hairline-border bg-parchment-2/40 text-ink-text font-serif tracking-widest uppercase hover:bg-gold-bronze hover:text-parchment-0 transition-all duration-300 flex items-center gap-3"
-            onClick={() => {
-              // TODO: trigger deep Tiefenanalyse flow
-              console.info('Tiefenanalyse requested');
-            }}
-          >
-            <Star className="w-4 h-4" />
-            {CTA.deepAnalysis}
-          </button>
+          <PlanetsList chartData={chartData} />
         </div>
       </main>
+
+      {/* Floating Agent Selector */}
+      {selectedAgent && agentIds.length > 1 && (
+        <div className="fixed bottom-24 right-6 z-50 bg-parchment-1/90 backdrop-blur-md hairline-border rounded-xl p-3 shadow-xl transition-all hover:bg-parchment-0">
+          <label className="block text-[10px] font-mono tracking-widest text-gold-bronze mb-1 opacity-80">CONSULTING AGENT</label>
+          <select 
+            title="Select Astrologer"
+            className="bg-transparent text-royal-900 text-sm font-serif font-medium outline-none cursor-pointer w-full"
+            value={selectedAgent}
+            onChange={(e) => setSelectedAgent(e.target.value)}
+          >
+            {agentIds.map((id, idx) => (
+              <option key={id} value={id}>{agentLabels[idx] || `Agent ${idx + 1}`}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* ElevenLabs Widget */}
+      {selectedAgent && (
+        <ElevenLabsWidget agent-id={selectedAgent}></ElevenLabsWidget>
+      )}
     </div>
   );
 }
