@@ -16,3 +16,8 @@ export function getSupabase(): SupabaseClient | null {
   supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
   return supabaseClient;
 }
+
+// Named export for direct usage — returns a stub that noops when unconfigured
+const noop = () => ({ data: null, error: { message: 'Supabase not configured' } });
+const stub = { from: () => ({ select: () => ({ single: noop, order: () => ({ data: null, error: null }) }) }) };
+export const supabase = (getSupabase() ?? stub) as SupabaseClient;

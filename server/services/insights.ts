@@ -13,10 +13,10 @@ export async function createInsight(
   if (!chart) throw new AppError(404, 'Chart not found');
 
   const fusionData = await bafe.calculateFusion({
-    local_datetime: chart.local_datetime,
-    tz_id: chart.tz_id,
-    geo_lon_deg: chart.geo_lon_deg,
-    geo_lat_deg: chart.geo_lat_deg,
+    date: chart.local_datetime,
+    tz: chart.tz_id,
+    lon: chart.geo_lon_deg,
+    lat: chart.geo_lat_deg,
   });
 
   const { text, model, tokensUsed } = await gemini.generateInsight(

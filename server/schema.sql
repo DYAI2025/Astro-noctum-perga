@@ -35,11 +35,33 @@ create table if not exists insights (
 create index if not exists idx_charts_user_id on charts(user_id);
 create index if not exists idx_insights_chart_id on insights(chart_id);
 
+-- Astro Profile: stores the default/demo profile for the dashboard display
+create table if not exists astro_profile (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  sun_sign text,
+  moon_sign text,
+  ascendant text,
+  bazi_year text,
+  bazi_year_char text,
+  bazi_month text,
+  bazi_month_char text,
+  day_master text,
+  day_master_char text,
+  hour_master text,
+  hour_master_char text,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_astro_profile_user_id on astro_profile(user_id);
+
 -- RLS: enabled with open policies (no auth yet)
 alter table users enable row level security;
 alter table charts enable row level security;
 alter table insights enable row level security;
+alter table astro_profile enable row level security;
 
 create policy "Allow all on users" on users for all using (true) with check (true);
 create policy "Allow all on charts" on charts for all using (true) with check (true);
 create policy "Allow all on insights" on insights for all using (true) with check (true);
+create policy "Allow all on astro_profile" on astro_profile for all using (true) with check (true);

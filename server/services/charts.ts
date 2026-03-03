@@ -5,6 +5,7 @@ import type { CreateChartInput, Chart } from '../data/types.js';
 export async function createChart(input: CreateChartInput): Promise<Chart> {
   const localDatetime = `${input.birth_date}T${input.birth_time}:00`;
 
+  // Use unified /calculate/chart endpoint with correct ChartRequest field names
   const chartData = await bafe.calculateChart({
     local_datetime: localDatetime,
     tz_id: input.tz_id,
@@ -21,7 +22,7 @@ export async function createChart(input: CreateChartInput): Promise<Chart> {
     geo_lon_deg: input.geo_lon_deg,
     geo_lat_deg: input.geo_lat_deg,
     local_datetime: localDatetime,
-    chart_data: chartData,
+    chart_data: chartData as unknown as Record<string, unknown>,
   });
 }
 
