@@ -9,7 +9,7 @@ export async function createInsight(
   chartId: string,
   promptType = 'synthesis',
 ): Promise<Insight> {
-  const chart = await chartRepo.getChartById(chartId);
+  const chart = await chartRepo.getNatalChartById(chartId);
   if (!chart) throw new AppError(404, 'Chart not found');
 
   const fusionData = await bafe.calculateFusion({

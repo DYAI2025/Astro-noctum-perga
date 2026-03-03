@@ -7,8 +7,21 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Compass, Star, Activity, Eye, Zap } from 'lucide-react';
+import { Compass, Activity, Eye, Zap } from 'lucide-react';
 import type { BAFEChartResponse } from './types';
+import { getUserId } from './api';
+import SolarSystem3D from './components/SolarSystem3D';
+
+const agentIds = ((import.meta as any).env?.VITE_ELEVENLABS_AGENT_IDS ?? (import.meta as any).env?.VITE_ELEVENLABS_AGENT_ID ?? "agent_xyz")
+  .split(",")
+  .map((s: string) => s.trim())
+  .filter(Boolean);
+
+const agentLabels = ((import.meta as any).env?.VITE_ELEVENLABS_AGENT_LABELS ?? "Astro Expert")
+  .split(",")
+  .map((s: string) => s.trim());
+
+const ElevenLabsWidget = 'elevenlabs-convai' as any;
 
 // ─── Astronomy / BaZi Helpers ────────────────────────────────────────────────
 
@@ -94,77 +107,6 @@ const getBaziGlyph = (animal: string): string => {
   return g[animal] || '🏮';
 };
 
-// ─── Interactive Starfield ───────────────────────────────────────────────────
-
-const InteractiveStarfield = () => {
-  const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
-  const [activeStar, setActiveStar] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    let afId: number;
-    const onMove = (e: MouseEvent) => {
-      afId = requestAnimationFrame(() => {
-        setMousePos({
-          x: (e.clientX / window.innerWidth - 0.5) * 20,
-          y: (e.clientY / window.innerHeight - 0.5) * 20,
-        });
-      });
-    };
-    window.addEventListener('mousemove', onMove);
-    return () => { window.removeEventListener('mousemove', onMove); cancelAnimationFrame(afId); };
-  }, []);
-
-  const layers = React.useMemo(() => {
-    const gen = (count: number, depth: number) =>
-      Array.from({ length: count }).map((_, i) => ({
-        id: `${depth}-${i}`,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: Math.random() * (depth === 1 ? 1 : depth === 2 ? 2 : 3) + 0.5,
-        info: `Celestial Body ${depth}-${i}: RA ${Math.floor(Math.random() * 24)}h, Dec ${Math.floor(Math.random() * 90)}°`,
-        gold: Math.random() > 0.8,
-      }));
-    return [
-      { depth: 1, stars: gen(60, 1) },
-      { depth: 2, stars: gen(30, 2) },
-      { depth: 4, stars: gen(10, 4) },
-    ];
-  }, []);
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-auto z-0" onClick={() => setActiveStar(null)}>
-      {layers.map(layer => (
-        <motion.div
-          key={layer.depth}
-          className="absolute inset-0"
-          animate={{ x: mousePos.x * layer.depth, y: mousePos.y * layer.depth }}
-          transition={{ type: 'spring', stiffness: 50, damping: 20 }}
-        >
-          {layer.stars.map(star => (
-            <div
-              key={star.id}
-              className={`absolute rounded-full ${star.gold ? 'bg-gold-bronze' : 'bg-royal-900'} cursor-pointer hover:bg-gold-antique transition-colors hover:scale-150`}
-              style={{
-                left: `${star.x}%`, top: `${star.y}%`,
-                width: star.size, height: star.size,
-                boxShadow: star.gold ? '0 0 6px rgba(130,106,75,0.4)' : '0 0 4px rgba(14,27,51,0.2)',
-              }}
-              onClick={e => { e.stopPropagation(); setActiveStar(activeStar === star.id ? null : star.id); }}
-            >
-              {activeStar === star.id && (
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-48 p-3 hairline-border bg-parchment-0/90 backdrop-blur-md rounded-lg z-50 shadow-lg" onClick={e => e.stopPropagation()}>
-                  <p className="mono-tag text-gold-bronze mb-1">STAR DATA</p>
-                  <p className="font-serif text-sm text-ink-text">{star.info}</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </motion.div>
-      ))}
-    </div>
-  );
-};
-
 // ─── Header ──────────────────────────────────────────────────────────────────
 
 const SystemHeaderStatusBar = () => (
@@ -183,94 +125,24 @@ const SystemHeaderStatusBar = () => (
   </header>
 );
 
-// ─── Detailed Sun ─────────────────────────────────────────────────────────────
-
-const DetailedSun = () => (
-  <div className="relative w-28 h-28 rounded-full flex items-center justify-center">
-    <div className="absolute inset-0 rounded-full bg-[#FFF5D1] shadow-[0_0_60px_rgba(255,215,0,0.6),inset_0_0_20px_rgba(255,255,255,1)]" />
-    <svg className="absolute inset-0 w-full h-full rounded-full mix-blend-multiply opacity-80 animate-[spin_60s_linear_infinite]" viewBox="0 0 100 100">
-      <defs>
-        <filter id="plasma-1">
-          <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="4" seed="1" result="noise">
-            <animate attributeName="baseFrequency" values="0.05;0.07;0.05" dur="20s" repeatCount="indefinite" />
-          </feTurbulence>
-          <feColorMatrix in="noise" type="matrix" values="1 0 0 0 0.8  0 1 0 0 0.4  0 0 1 0 0  0 0 0 3 -1" result="coloredNoise" />
-          <feComposite in="coloredNoise" in2="SourceGraphic" operator="in" />
-        </filter>
-      </defs>
-      <circle cx="50" cy="50" r="50" fill="white" filter="url(#plasma-1)" />
-    </svg>
-    <svg className="absolute inset-0 w-full h-full rounded-full mix-blend-color-burn opacity-60 animate-[spin_40s_linear_infinite_reverse]" viewBox="0 0 100 100">
-      <defs>
-        <filter id="plasma-2">
-          <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="3" seed="2" result="noise">
-            <animate attributeName="baseFrequency" values="0.08;0.06;0.08" dur="15s" repeatCount="indefinite" />
-          </feTurbulence>
-          <feColorMatrix in="noise" type="matrix" values="1 0 0 0 0.9  0 1 0 0 0.2  0 0 1 0 0  0 0 0 4 -1.5" result="coloredNoise" />
-          <feComposite in="coloredNoise" in2="SourceGraphic" operator="in" />
-        </filter>
-      </defs>
-      <circle cx="50" cy="50" r="50" fill="white" filter="url(#plasma-2)" />
-    </svg>
-    <svg className="absolute -inset-4 w-[calc(100%+2rem)] h-[calc(100%+2rem)] mix-blend-screen opacity-50 animate-[spin_90s_linear_infinite]" viewBox="0 0 120 120">
-      <defs>
-        <filter id="flares">
-          <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="3" result="noise">
-            <animate attributeName="baseFrequency" values="0.03;0.05;0.03" dur="25s" repeatCount="indefinite" />
-          </feTurbulence>
-          <feColorMatrix in="noise" type="matrix" values="1 0 0 0 0.9  0 1 0 0 0.5  0 0 1 0 0  0 0 0 2 -1" result="coloredNoise" />
-          <feGaussianBlur in="coloredNoise" stdDeviation="2" result="blurred" />
-          <feComposite in="blurred" in2="SourceGraphic" operator="in" />
-        </filter>
-      </defs>
-      <circle cx="60" cy="60" r="55" fill="white" filter="url(#flares)" />
-    </svg>
-    <div className="absolute inset-0 rounded-full shadow-[inset_-10px_-10px_20px_rgba(139,0,0,0.6),inset_10px_10px_20px_rgba(255,255,255,0.8)] mix-blend-overlay" />
-  </div>
-);
-
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 
 const HeroSolarSystemModule = () => (
-  <section className="relative w-full h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden hairline-border-b">
-    <InteractiveStarfield />
-    <div className="absolute inset-0 flex items-center justify-center opacity-20">
-      {[1, 2, 3, 4, 5].map(ring => (
-        <div key={ring} className="absolute rounded-full border border-gold-bronze"
-          style={{ width: `${ring * 20}%`, height: `${ring * 20}%`, borderStyle: ring % 2 === 0 ? 'dashed' : 'solid', borderWidth: '1px' }} />
-      ))}
+  <section className="relative w-full h-[60vh] min-h-[500px] overflow-hidden hairline-border-b">
+
+    {/* 3D Solar System — transparent canvas, parchment shows through */}
+    <SolarSystem3D />
+
+    {/* Zodiac cardinal labels — pointer-events-none so drag passes to canvas */}
+    <div className="absolute inset-0 pointer-events-none z-10">
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 mono-tag text-gold-bronze/40">0° ARIES</div>
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 mono-tag text-gold-bronze/40">180° LIBRA</div>
+      <div className="absolute left-6 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/40 -rotate-90">90° CANCER</div>
+      <div className="absolute right-6 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/40 rotate-90">270° CAPRICORN</div>
     </div>
-    <div className="absolute inset-0 flex items-center justify-center opacity-10">
-      {[0, 30, 60, 90, 120, 150].map(deg => (
-        <div key={deg} className="absolute w-full h-[1px] bg-gold-bronze" style={{ transform: `rotate(${deg}deg)` }} />
-      ))}
-    </div>
-    <div className="absolute inset-0 flex items-center justify-center opacity-20">
-      {Array.from({ length: 72 }).map((_, i) => (
-        <div key={i} className="absolute w-[95%] h-[1px]" style={{ transform: `rotate(${i * 5}deg)` }}>
-          <div className={`w-${i % 6 === 0 ? '3' : '1'} h-full bg-gold-bronze`} />
-        </div>
-      ))}
-    </div>
-    <div className="absolute top-8 left-1/2 -translate-x-1/2 mono-tag text-gold-bronze/50">0° ARIES</div>
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 mono-tag text-gold-bronze/50">180° LIBRA</div>
-    <div className="absolute left-8 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/50 -rotate-90">90° CANCER</div>
-    <div className="absolute right-8 top-1/2 -translate-y-1/2 mono-tag text-gold-bronze/50 rotate-90">270° CAPRICORN</div>
-    <div className="relative z-10 w-32 h-32 rounded-full hairline-border flex items-center justify-center bg-parchment-0/80 backdrop-blur-sm shadow-[0_0_40px_rgba(130,106,75,0.1)]">
-      <DetailedSun />
-    </div>
-    <div className="absolute z-10 w-full h-full flex items-center justify-center pointer-events-none">
-      <div className="absolute w-[40%] h-[40%] animate-[spin_60s_linear_infinite]">
-        <div className="absolute -top-2 left-1/2 w-4 h-4 rounded-full bg-royal-700 shadow-[0_0_10px_rgba(27,44,74,0.3)]" />
-      </div>
-      <div className="absolute w-[60%] h-[60%] animate-[spin_90s_linear_infinite_reverse]">
-        <div className="absolute top-1/2 -right-2 w-5 h-5 rounded-full bg-gold-bronze shadow-[0_0_15px_rgba(130,106,75,0.2)]" />
-      </div>
-      <div className="absolute w-[80%] h-[80%] animate-[spin_120s_linear_infinite]">
-        <div className="absolute -bottom-3 left-1/3 w-6 h-6 rounded-full bg-royal-800 shadow-[0_0_20px_rgba(22,34,57,0.2)]" />
-      </div>
-    </div>
-    <div className="absolute bottom-8 left-8">
+
+    {/* Title — bottom-left, pointer-events-none */}
+    <div className="absolute bottom-8 left-8 z-20 pointer-events-none">
       <h1 className="font-serif text-5xl md:text-7xl font-light tracking-tight text-ink-text mb-2">Astro Noctum</h1>
       <p className="mono-tag text-gold-bronze">ORBITAL OVERVIEW // EPOCH 2026</p>
     </div>
@@ -301,7 +173,10 @@ const InsightCardQuotePanel = () => (
 
 const KPIStrip = ({ chartData }: { chartData?: BAFEChartResponse | null }) => {
   const harmony = chartData?.wuxing.harmony_index;
+  const sunSign = chartData?.positions.find(p => p.name === 'Sun')?.sign_name ?? 'Aries';
+
   const kpis = [
+    { label: 'SONNENZEICHEN', value: getZodiacGlyph(sunSign), sub: sunSign.toUpperCase(), icon: null },
     { label: 'RESONANZ', value: harmony != null ? `${Math.round(harmony * 100)}%` : '87%', icon: Activity },
     { label: 'FOKUS',    value: chartData?.wuxing.dominant_planet.toUpperCase() ?? 'ZENITH',   icon: Eye },
     { label: 'ENERGIE',  value: chartData?.wuxing.dominant_bazi.toUpperCase()   ?? 'STEIGEND', icon: Zap },
@@ -309,12 +184,18 @@ const KPIStrip = ({ chartData }: { chartData?: BAFEChartResponse | null }) => {
 
   return (
     <section className="w-full hairline-border-y bg-parchment-1/30">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gold-bronze/20">
+      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 divide-y-0 divide-x divide-gold-bronze/20">
         {kpis.map((kpi, i) => (
-          <div key={i} className="p-8 flex flex-col items-center justify-center text-center">
-            <kpi.icon className="w-5 h-5 text-gold-bronze mb-4 opacity-70" />
+          <div key={i} className={`p-8 flex flex-col items-center justify-center text-center ${i < kpis.length - 1 ? 'hairline-border-r' : ''}`}>
+            {kpi.icon
+              ? <kpi.icon className="w-5 h-5 text-gold-bronze mb-4 opacity-70" />
+              : <span className="text-2xl text-gold-bronze mb-4 leading-none">{kpi.value}</span>
+            }
             <span className="mono-tag mb-2">{kpi.label}</span>
-            <span className="font-serif text-3xl text-ink-text">{kpi.value}</span>
+            {kpi.icon
+              ? <span className="font-serif text-3xl text-ink-text">{kpi.value}</span>
+              : <span className="font-serif text-xl text-ink-text tracking-wide">{kpi.sub}</span>
+            }
           </div>
         ))}
       </div>
@@ -602,6 +483,35 @@ const PersonalizedInsights = ({
 
       const result = await generateInsight(chart.id);
       setInsight(result.content);
+
+      try {
+        const { upsertAstroProfile } = await import('./supabase');
+        if (chart.chart_data) {
+          const bazi = (chart.chart_data as any).bazi.pillars;
+          const sun = (chart.chart_data as any).positions.find((p: any) => p.name === 'Sun');
+          const moon = (chart.chart_data as any).positions.find((p: any) => p.name === 'Moon');
+          const ascendantDeg = (chart.chart_data as any).angles?.Ascendant || 0;
+          
+          await upsertAstroProfile({
+            user_id: getUserId(),
+            sun_sign: sun?.sign_name,
+            moon_sign: moon?.sign_name,
+            ascendant: degToSignName(ascendantDeg),
+            bazi_year: bazi?.year?.animal,
+            bazi_year_char: (STEM_CHARS[bazi?.year?.stem] || '') + (BRANCH_CHARS[bazi?.year?.branch] || ''),
+            bazi_month: bazi?.month?.animal,
+            bazi_month_char: (STEM_CHARS[bazi?.month?.stem] || '') + (BRANCH_CHARS[bazi?.month?.branch] || ''),
+            day_master: bazi?.day?.stem,
+            day_master_char: STEM_CHARS[bazi?.day?.stem] || '',
+            hour_master: bazi?.hour?.stem,
+            hour_master_char: STEM_CHARS[bazi?.hour?.stem] || '',
+            astro_json: { bafe: chart.chart_data, interpretation: result.content },
+            astro_computed_at: new Date().toISOString(),
+          });
+        }
+      } catch (e) {
+        console.error('Profile upsert failed', e);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate insight');
     } finally {
@@ -637,8 +547,8 @@ const PersonalizedInsights = ({
         </div>
         {/* Timezone */}
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">TIMEZONE</label>
-          <input type="text" placeholder="e.g. Europe/Berlin" value={formData.tz} onChange={set('tz')}
+          <label htmlFor="tz-input" className="mono-tag text-gold-bronze">TIMEZONE</label>
+          <input id="tz-input" title="Timezone" placeholder="e.g. Europe/Berlin" type="text" value={formData.tz} onChange={set('tz')}
             className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm" />
         </div>
       </div>
@@ -674,6 +584,19 @@ const PersonalizedInsights = ({
 
 export default function App() {
   const [chartData, setChartData] = useState<BAFEChartResponse | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState(agentIds[0] || '');
+
+  React.useEffect(() => {
+    // Inject ElevenLabs web component script once
+    const scriptId = 'elevenlabs-convai-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://elevenlabs.io/convai-widget/index.js';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
 
   return (
     <div className="relative min-h-screen selection:bg-gold-bronze/30 selection:text-ink-text">
@@ -690,22 +613,32 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid grid-cols-12 gap-6">
             <ZodiacMatrix chartData={chartData} />
-            <PlanetsList chartData={chartData} />
-            <PersonalizedInsights onChartGenerated={setChartData} />
           </div>
-        </div>
-
-        {/* Primary CTA — scrolls to the insight form */}
-        <div className="max-w-7xl mx-auto px-6 flex justify-center mt-8">
-          <button
-            className="px-8 py-4 rounded-full hairline-border bg-parchment-2/40 text-ink-text font-serif tracking-widest uppercase hover:bg-gold-bronze hover:text-parchment-0 transition-all duration-300 flex items-center gap-3"
-            onClick={() => document.getElementById('insights-section')?.scrollIntoView({ behavior: 'smooth' })}
-          >
-            <Star className="w-4 h-4" />
-            Tiefenanalyse
-          </button>
+          <PlanetsList chartData={chartData} />
         </div>
       </main>
+
+      {/* Floating Agent Selector */}
+      {selectedAgent && agentIds.length > 1 && (
+        <div className="fixed bottom-24 right-6 z-50 bg-parchment-1/90 backdrop-blur-md hairline-border rounded-xl p-3 shadow-xl transition-all hover:bg-parchment-0">
+          <label className="block text-[10px] font-mono tracking-widest text-gold-bronze mb-1 opacity-80">CONSULTING AGENT</label>
+          <select 
+            title="Select Astrologer"
+            className="bg-transparent text-royal-900 text-sm font-serif font-medium outline-none cursor-pointer w-full"
+            value={selectedAgent}
+            onChange={(e) => setSelectedAgent(e.target.value)}
+          >
+            {agentIds.map((id, idx) => (
+              <option key={id} value={id}>{agentLabels[idx] || `Agent ${idx + 1}`}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* ElevenLabs Widget */}
+      {selectedAgent && (
+        <ElevenLabsWidget agent-id={selectedAgent}></ElevenLabsWidget>
+      )}
     </div>
   );
 }

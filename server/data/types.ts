@@ -4,7 +4,18 @@ export interface User {
   metadata: Record<string, unknown>;
 }
 
-export interface Chart {
+export interface BirthData {
+  id: string;
+  user_id: string;
+  birth_utc: string;
+  lat: number;
+  lon: number;
+  place_label: string | null;
+  tz_id: string | null;
+  created_at: string;
+}
+
+export interface NatalChart {
   id: string;
   user_id: string;
   birth_date: string;
@@ -25,6 +36,33 @@ export interface Insight {
   model: string;
   prompt_type: string;
   tokens_used: number;
+  created_at: string;
+}
+
+export interface AstroProfile {
+  id: string;
+  user_id: string;
+  sun_sign: string | null;
+  moon_sign: string | null;
+  ascendant: string | null;
+  bazi_year: string | null;
+  bazi_year_char: string | null;
+  bazi_month: string | null;
+  bazi_month_char: string | null;
+  day_master: string | null;
+  day_master_char: string | null;
+  hour_master: string | null;
+  hour_master_char: string | null;
+  astro_json: Record<string, unknown> | null;
+  astro_computed_at: string | null;
+  created_at: string;
+}
+
+export interface AgentConversation {
+  id: string;
+  user_id: string;
+  summary: string;
+  topics: string[];
   created_at: string;
 }
 
