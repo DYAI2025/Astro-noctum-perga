@@ -529,20 +529,20 @@ const PersonalizedInsights = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Birth Date */}
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">BIRTH DATE <span className="text-red-700 font-sans">*</span></label>
-          <input type="date" value={formData.date} onChange={set('date')}
+          <label htmlFor="input-date" className="mono-tag text-gold-bronze">BIRTH DATE <span className="text-red-700 font-sans">*</span></label>
+          <input id="input-date" title="Birth Date" type="date" value={formData.date} onChange={set('date')}
             className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm" />
         </div>
         {/* Birth Time */}
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">BIRTH TIME <span className="text-red-700 font-sans">*</span></label>
-          <input type="time" value={formData.time} onChange={set('time')}
+          <label htmlFor="input-time" className="mono-tag text-gold-bronze">BIRTH TIME <span className="text-red-700 font-sans">*</span></label>
+          <input id="input-time" title="Birth Time" type="time" value={formData.time} onChange={set('time')}
             className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm" />
         </div>
         {/* Location */}
         <div className="flex flex-col gap-2">
-          <label className="mono-tag text-gold-bronze">BIRTH LOCATION <span className="text-red-700 font-sans">*</span></label>
-          <input type="text" placeholder="e.g. Munich, DE" value={formData.location} onChange={set('location')}
+          <label htmlFor="input-location" className="mono-tag text-gold-bronze">BIRTH LOCATION <span className="text-red-700 font-sans">*</span></label>
+          <input id="input-location" title="Birth Location" type="text" placeholder="e.g. Munich, DE" value={formData.location} onChange={set('location')}
             className="bg-parchment-2/30 hairline-border rounded-xl px-4 py-3 text-ink-text focus:outline-none focus:border-gold-bronze/50 font-mono text-sm" />
         </div>
         {/* Timezone */}
