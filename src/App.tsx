@@ -11,6 +11,70 @@ import { Compass, Activity, Eye, Zap } from 'lucide-react';
 import type { BAFEChartResponse } from './types';
 import { getUserId } from './api';
 import SolarSystem3D from './components/SolarSystem3D';
+import {
+  BRAND,
+  HERO_COORDINATES,
+  INSIGHT_QUOTE,
+  PLANETS_PANEL,
+  HOUSES_PANEL,
+  INSIGHTS_FORM,
+  ZODIAC_GLYPHS,
+  BAZI_GLYPHS
+} from './content';
+
+const STEM_CHARS: Record<string, string> = {
+  Wood_Yang: '甲', Wood_Yin: '乙',
+  Fire_Yang: '丙', Fire_Yin: '丁',
+  Earth_Yang: '戊', Earth_Yin: '己',
+  Metal_Yang: '庚', Metal_Yin: '辛',
+  Water_Yang: '壬', Water_Yin: '癸'
+};
+
+const BRANCH_CHARS: Record<string, string> = {
+  Rat: '子', Ox: '丑', Tiger: '寅', Rabbit: '卯',
+  Dragon: '辰', Snake: '巳', Horse: '午', Goat: '未',
+  Monkey: '申', Rooster: '酉', Dog: '戌', Pig: '亥'
+};
+
+const MAIN_PLANETS = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+
+const PLANET_GLYPHS: Record<string, string> = {
+  Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂',
+  Jupiter: '♃', Saturn: '♄', Uranus: '♅', Neptune: '♆', Pluto: '♇'
+};
+
+const getZodiacGlyph = (sign: string) => ZODIAC_GLYPHS[sign] ?? '✦';
+const getBaziGlyph = (animal: string) => BAZI_GLYPHS[animal] ?? '✦';
+const degToSignName = (deg: number) => {
+  const signs = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+  return signs[Math.floor(((deg % 360) + 360) % 360 / 30)] || 'Aries';
+};
+
+const getPlanetHouse = (deg: number, houses: Record<string, number>): string => {
+  const HOUSE_ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+  for (let i = 1; i <= 12; i++) {
+    const nextI = i === 12 ? 1 : i + 1;
+    const currentCusp = houses[String(i)] ?? 0;
+    const nextCusp = houses[String(nextI)] ?? 360;
+    if (nextCusp > currentCusp) {
+      if (deg >= currentCusp && deg < nextCusp) return HOUSE_ROMAN[i-1];
+    } else {
+      if (deg >= currentCusp || deg < nextCusp) return HOUSE_ROMAN[i-1];
+    }
+  }
+  return 'I';
+};
+
+const normalizeWuxingToUI = (wuxing: any) => {
+  if (!wuxing) return [];
+  return [
+    { name: 'Wood', value: wuxing.Wood || 0, color: 'bg-[#4A6B53]' },
+    { name: 'Fire', value: wuxing.Fire || 0, color: 'bg-[#8B3A3A]' },
+    { name: 'Earth', value: wuxing.Earth || 0, color: 'bg-[#826A4B]' },
+    { name: 'Metal', value: wuxing.Metal || 0, color: 'bg-[#9CA3AF]' },
+    { name: 'Water', value: wuxing.Water || 0, color: 'bg-[#1B2C4A]' }
+  ];
+};
 
 const agentIds = ((import.meta as any).env?.VITE_ELEVENLABS_AGENT_IDS ?? (import.meta as any).env?.VITE_ELEVENLABS_AGENT_ID ?? "agent_xyz")
   .split(",")
@@ -20,6 +84,22 @@ const agentIds = ((import.meta as any).env?.VITE_ELEVENLABS_AGENT_IDS ?? (import
 const agentLabels = ((import.meta as any).env?.VITE_ELEVENLABS_AGENT_LABELS ?? "Astro Expert")
   .split(",")
   .map((s: string) => s.trim());
+
+// Interactive Starfield Component
+const InteractiveStarfield = () => {
+  const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
+  const [activeStar, setActiveStar] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({
+        x: (e.clientX / window.innerWidth - 0.5) * 2,
+        y: (e.clientY / window.innerHeight - 0.5) * 2,
+      });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   const layers = React.useMemo(() => {
     const generateStars = (count: number, depth: number) =>
@@ -39,8 +119,22 @@ const agentLabels = ((import.meta as any).env?.VITE_ELEVENLABS_AGENT_LABELS ?? "
     ];
   }, []);
 
+  const starsStyle = React.useMemo(() => {
+    return layers.flatMap(l => l.stars).map(star => `
+      .star-${star.id} {
+        left: ${star.x}%;
+        top: ${star.y}%;
+        width: ${star.size}px;
+        height: ${star.size}px;
+        background-color: ${star.isGold ? '#826A4B' : '#0E1B33'};
+        box-shadow: ${star.isGold ? '0 0 6px rgba(130,106,75,0.4)' : '0 0 4px rgba(14, 27, 51, 0.2)'};
+      }
+    `).join('\n');
+  }, [layers]);
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-auto z-0" onClick={() => setActiveStar(null)}>
+      <style dangerouslySetInnerHTML={{ __html: starsStyle }} />
       {layers.map((layer) => (
         <motion.div
           key={layer.depth}
@@ -54,17 +148,7 @@ const agentLabels = ((import.meta as any).env?.VITE_ELEVENLABS_AGENT_LABELS ?? "
           {layer.stars.map((star) => (
             <div
               key={star.id}
-              className="absolute rounded-full cursor-pointer transition-transform hover:scale-150"
-              style={{
-                left: `${star.x}%`,
-                top: `${star.y}%`,
-                width: star.size,
-                height: star.size,
-                backgroundColor: star.isGold ? '#826A4B' : '#0E1B33',
-                boxShadow: star.isGold
-                  ? '0 0 6px rgba(130,106,75,0.4)'
-                  : '0 0 4px rgba(14, 27, 51, 0.2)',
-              }}
+              className={`absolute rounded-full cursor-pointer transition-transform hover:scale-150 star-${star.id}`}
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveStar(activeStar === star.id ? null : star.id);
@@ -186,13 +270,7 @@ const HeroSolarSystemModule = () => (
       {[1, 2, 3, 4, 5].map((ring) => (
         <div
           key={ring}
-          className="absolute rounded-full border border-gold-bronze"
-          style={{
-            width: `${ring * 20}%`,
-            height: `${ring * 20}%`,
-            borderStyle: ring % 2 === 0 ? 'dashed' : 'solid',
-            borderWidth: '1px',
-          }}
+          className={`absolute rounded-full border border-gold-bronze ring-${ring}`}
         />
       ))}
     </div>
@@ -202,8 +280,7 @@ const HeroSolarSystemModule = () => (
       {[0, 30, 60, 90, 120, 150].map((deg) => (
         <div
           key={deg}
-          className="absolute w-full h-[1px] bg-gold-bronze"
-          style={{ transform: `rotate(${deg}deg)` }}
+          className={`absolute w-full h-[1px] bg-gold-bronze radial-${deg}`}
         />
       ))}
     </div>
@@ -213,12 +290,10 @@ const HeroSolarSystemModule = () => (
       {Array.from({ length: 72 }).map((_, i) => (
         <div
           key={i}
-          className="absolute w-[95%] h-[1px]"
-          style={{ transform: `rotate(${i * 5}deg)` }}
+          className={`absolute w-[95%] h-[1px] tick-${i}`}
         >
           <div
-            className="h-full bg-gold-bronze"
-            style={{ width: i % 6 === 0 ? '0.75rem' : '0.25rem' }}
+            className={`h-full bg-gold-bronze tick-inner-${i}`}
           />
         </div>
       ))}
@@ -490,9 +565,8 @@ const WuxingBalancePanel = ({ chartData }: { chartData?: BAFEChartResponse | nul
             </div>
             <span className="mono-tag w-8 text-gold-bronze">{el.value}%</span>
           </div>
-          <span className="mono-tag w-8 text-gold-bronze">{el.value}%</span>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };
@@ -509,12 +583,9 @@ const HousesOverview12 = ({ chartData }: { chartData?: BAFEChartResponse | null 
     return { num, name: HOUSE_NAMES[i], glyph: sign ? getZodiacGlyph(sign) : DEMO_HOUSE_GLYPHS[i] };
   });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Houses Overview
-// ─────────────────────────────────────────────────────────────────────────────
-const HousesOverview12 = () => (
-  <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
-    <div className="flex justify-between items-end mb-8">
+  return (
+    <div className="col-span-12 hairline-border rounded-3xl p-8 bg-parchment-1/50">
+      <div className="flex justify-between items-end mb-8">
       <div>
         <h2 className="font-serif text-3xl text-ink-text mb-1">{HOUSES_PANEL.title}</h2>
         <span className="mono-tag">{HOUSES_PANEL.subtitle}</span>
@@ -530,7 +601,8 @@ const HousesOverview12 = () => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 // ─── Personalized Insights Form ───────────────────────────────────────────────
 
@@ -740,9 +812,7 @@ export default function App() {
       )}
 
       {/* ElevenLabs Widget */}
-      {selectedAgent && (
-        <ElevenLabsWidget agent-id={selectedAgent}></ElevenLabsWidget>
-      )}
+      {selectedAgent && React.createElement('elevenlabs-convai', { 'agent-id': selectedAgent })}
     </div>
   );
 }
